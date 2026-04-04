@@ -1,0 +1,13 @@
+{
+  "analysis_date": "2026-04-04T19:00:19.692778",
+  "sample_size_patients": 12100,
+  "sample_size_rows": 467929,
+  "threshold": 0.75,
+  "metrics": {
+    "patient_recall": 0.7191,
+    "patient_precision": 0.4692,
+    "patient_fdr_discovery_rate": 0.5308,
+    "mean_lead_time_hours": 40.69,
+    "false_alarms_per_1000_hours": 47.41
+  }
+}

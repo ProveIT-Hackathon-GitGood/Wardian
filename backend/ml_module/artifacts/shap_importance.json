@@ -1,0 +1,1090 @@
+[
+  {
+    "feature": "ICULOS",
+    "mean_abs_shap": 0.497031
+  },
+  {
+    "feature": "FiO2_hours_since_last",
+    "mean_abs_shap": 0.267444
+  },
+  {
+    "feature": "Lactate_hours_since_last",
+    "mean_abs_shap": 0.117504
+  },
+  {
+    "feature": "Calcium_hours_since_last",
+    "mean_abs_shap": 0.086167
+  },
+  {
+    "feature": "NEWS_Total_Score",
+    "mean_abs_shap": 0.074743
+  },
+  {
+    "feature": "WBC",
+    "mean_abs_shap": 0.071631
+  },
+  {
+    "feature": "Resp_min_24h",
+    "mean_abs_shap": 0.070454
+  },
+  {
+    "feature": "FiO2",
+    "mean_abs_shap": 0.063652
+  },
+  {
+    "feature": "Temp_max_12h",
+    "mean_abs_shap": 0.059512
+  },
+  {
+    "feature": "Hgb",
+    "mean_abs_shap": 0.058056
+  },
+  {
+    "feature": "Potassium",
+    "mean_abs_shap": 0.054866
+  },
+  {
+    "feature": "Resp_mean_24h",
+    "mean_abs_shap": 0.053666
+  },
+  {
+    "feature": "BUN",
+    "mean_abs_shap": 0.052691
+  },
+  {
+    "feature": "Creatinine",
+    "mean_abs_shap": 0.052051
+  },
+  {
+    "feature": "Bilirubin_total_hours_since_last",
+    "mean_abs_shap": 0.051721
+  },
+  {
+    "feature": "Platelets",
+    "mean_abs_shap": 0.049819
+  },
+  {
+    "feature": "Gender",
+    "mean_abs_shap": 0.049332
+  },
+  {
+    "feature": "SIRS_Total_Score",
+    "mean_abs_shap": 0.049226
+  },
+  {
+    "feature": "Temp_max_24h",
+    "mean_abs_shap": 0.047772
+  },
+  {
+    "feature": "AST_hours_since_last",
+    "mean_abs_shap": 0.044958
+  },
+  {
+    "feature": "PTT",
+    "mean_abs_shap": 0.044158
+  },
+  {
+    "feature": "Temp_max_8h",
+    "mean_abs_shap": 0.043358
+  },
+  {
+    "feature": "DBP_mean_24h",
+    "mean_abs_shap": 0.04209
+  },
+  {
+    "feature": "HR_zscore_24h",
+    "mean_abs_shap": 0.041975
+  },
+  {
+    "feature": "Temp_min_24h",
+    "mean_abs_shap": 0.041057
+  },
+  {
+    "feature": "Age",
+    "mean_abs_shap": 0.040781
+  },
+  {
+    "feature": "Temp_mean_24h",
+    "mean_abs_shap": 0.039213
+  },
+  {
+    "feature": "MAP_min_4h",
+    "mean_abs_shap": 0.039124
+  },
+  {
+    "feature": "SBP_max_24h",
+    "mean_abs_shap": 0.03864
+  },
+  {
+    "feature": "Temp_std_4h",
+    "mean_abs_shap": 0.036012
+  },
+  {
+    "feature": "Temp_min_4h",
+    "mean_abs_shap": 0.03546
+  },
+  {
+    "feature": "Alkalinephos_hours_since_last",
+    "mean_abs_shap": 0.034752
+  },
+  {
+    "feature": "Glucose",
+    "mean_abs_shap": 0.032263
+  },
+  {
+    "feature": "Shock_Index",
+    "mean_abs_shap": 0.030947
+  },
+  {
+    "feature": "Resp_max_24h",
+    "mean_abs_shap": 0.030425
+  },
+  {
+    "feature": "SBP_min_4h",
+    "mean_abs_shap": 0.027722
+  },
+  {
+    "feature": "BUN_Creatinine_Ratio",
+    "mean_abs_shap": 0.026701
+  },
+  {
+    "feature": "SOFA_Partial_Score",
+    "mean_abs_shap": 0.026579
+  },
+  {
+    "feature": "PTT_hours_since_last",
+    "mean_abs_shap": 0.026443
+  },
+  {
+    "feature": "SBP_mean_24h",
+    "mean_abs_shap": 0.025878
+  },
+  {
+    "feature": "MAP_min_24h",
+    "mean_abs_shap": 0.024699
+  },
+  {
+    "feature": "EtCO2_min_4h",
+    "mean_abs_shap": 0.024511
+  },
+  {
+    "feature": "MAP_max_24h",
+    "mean_abs_shap": 0.024391
+  },
+  {
+    "feature": "Lab_Density_12h",
+    "mean_abs_shap": 0.024133
+  },
+  {
+    "feature": "HR_max_12h",
+    "mean_abs_shap": 0.024053
+  },
+  {
+    "feature": "DBP_min_24h",
+    "mean_abs_shap": 0.023886
+  },
+  {
+    "feature": "Temp_std_12h",
+    "mean_abs_shap": 0.023546
+  },
+  {
+    "feature": "HCO3",
+    "mean_abs_shap": 0.022482
+  },
+  {
+    "feature": "EtCO2",
+    "mean_abs_shap": 0.021493
+  },
+  {
+    "feature": "PaCO2_hours_since_last",
+    "mean_abs_shap": 0.021438
+  },
+  {
+    "feature": "PaCO2",
+    "mean_abs_shap": 0.0211
+  },
+  {
+    "feature": "Temp",
+    "mean_abs_shap": 0.020036
+  },
+  {
+    "feature": "SBP_min_24h",
+    "mean_abs_shap": 0.01845
+  },
+  {
+    "feature": "WBC_hours_since_last",
+    "mean_abs_shap": 0.01833
+  },
+  {
+    "feature": "Temp_std_24h",
+    "mean_abs_shap": 0.018295
+  },
+  {
+    "feature": "SBP_std_24h",
+    "mean_abs_shap": 0.018014
+  },
+  {
+    "feature": "HR_mean_24h",
+    "mean_abs_shap": 0.017735
+  },
+  {
+    "feature": "O2Sat_std_8h",
+    "mean_abs_shap": 0.017671
+  },
+  {
+    "feature": "HR_std_24h",
+    "mean_abs_shap": 0.017144
+  },
+  {
+    "feature": "Calcium",
+    "mean_abs_shap": 0.017101
+  },
+  {
+    "feature": "DBP_max_24h",
+    "mean_abs_shap": 0.016244
+  },
+  {
+    "feature": "O2Sat_min_24h",
+    "mean_abs_shap": 0.016066
+  },
+  {
+    "feature": "Platelets_hours_since_last",
+    "mean_abs_shap": 0.016053
+  },
+  {
+    "feature": "Phosphate_hours_since_last",
+    "mean_abs_shap": 0.015957
+  },
+  {
+    "feature": "HR_max_8h",
+    "mean_abs_shap": 0.015867
+  },
+  {
+    "feature": "HR_max_24h",
+    "mean_abs_shap": 0.015583
+  },
+  {
+    "feature": "O2Sat_mean_24h",
+    "mean_abs_shap": 0.015466
+  },
+  {
+    "feature": "Glucose_hours_since_last",
+    "mean_abs_shap": 0.014994
+  },
+  {
+    "feature": "Temp_trend_12h",
+    "mean_abs_shap": 0.014927
+  },
+  {
+    "feature": "Resp_std_8h",
+    "mean_abs_shap": 0.014896
+  },
+  {
+    "feature": "HR_min_24h",
+    "mean_abs_shap": 0.01489
+  },
+  {
+    "feature": "Resp_std_24h",
+    "mean_abs_shap": 0.014639
+  },
+  {
+    "feature": "TroponinI_hours_since_last",
+    "mean_abs_shap": 0.014545
+  },
+  {
+    "feature": "Resp_mean_12h",
+    "mean_abs_shap": 0.01418
+  },
+  {
+    "feature": "Resp_min_12h",
+    "mean_abs_shap": 0.014055
+  },
+  {
+    "feature": "HR_trend_12h",
+    "mean_abs_shap": 0.014034
+  },
+  {
+    "feature": "EtCO2_max_4h",
+    "mean_abs_shap": 0.013973
+  },
+  {
+    "feature": "O2Sat_std_24h",
+    "mean_abs_shap": 0.013695
+  },
+  {
+    "feature": "SaO2_hours_since_last",
+    "mean_abs_shap": 0.013192
+  },
+  {
+    "feature": "Creatinine_hours_since_last",
+    "mean_abs_shap": 0.013073
+  },
+  {
+    "feature": "Resp_max_12h",
+    "mean_abs_shap": 0.013023
+  },
+  {
+    "feature": "BUN_hours_since_last",
+    "mean_abs_shap": 0.012832
+  },
+  {
+    "feature": "HR_mean_12h",
+    "mean_abs_shap": 0.012773
+  },
+  {
+    "feature": "Magnesium_hours_since_last",
+    "mean_abs_shap": 0.012641
+  },
+  {
+    "feature": "Chloride",
+    "mean_abs_shap": 0.012295
+  },
+  {
+    "feature": "Temp_trend_24h",
+    "mean_abs_shap": 0.012041
+  },
+  {
+    "feature": "MAP_mean_24h",
+    "mean_abs_shap": 0.011969
+  },
+  {
+    "feature": "Resp_max_4h",
+    "mean_abs_shap": 0.011116
+  },
+  {
+    "feature": "BaseExcess_hours_since_last",
+    "mean_abs_shap": 0.011048
+  },
+  {
+    "feature": "Fibrinogen_hours_since_last",
+    "mean_abs_shap": 0.01099
+  },
+  {
+    "feature": "EtCO2_mean_4h",
+    "mean_abs_shap": 0.01085
+  },
+  {
+    "feature": "Lactate",
+    "mean_abs_shap": 0.010792
+  },
+  {
+    "feature": "Temp_min_12h",
+    "mean_abs_shap": 0.010653
+  },
+  {
+    "feature": "HR_trend_24h",
+    "mean_abs_shap": 0.010533
+  },
+  {
+    "feature": "Chloride_hours_since_last",
+    "mean_abs_shap": 0.010529
+  },
+  {
+    "feature": "Magnesium",
+    "mean_abs_shap": 0.01026
+  },
+  {
+    "feature": "Temp_std_8h",
+    "mean_abs_shap": 0.009743
+  },
+  {
+    "feature": "NEWS_Resp_Score",
+    "mean_abs_shap": 0.009679
+  },
+  {
+    "feature": "O2Sat_min_4h",
+    "mean_abs_shap": 0.009541
+  },
+  {
+    "feature": "MAP_max_4h",
+    "mean_abs_shap": 0.00945
+  },
+  {
+    "feature": "TroponinI",
+    "mean_abs_shap": 0.00939
+  },
+  {
+    "feature": "DBP_min_12h",
+    "mean_abs_shap": 0.008797
+  },
+  {
+    "feature": "Hct_hours_since_last",
+    "mean_abs_shap": 0.008762
+  },
+  {
+    "feature": "Hgb_hours_since_last",
+    "mean_abs_shap": 0.008658
+  },
+  {
+    "feature": "Resp_std_4h",
+    "mean_abs_shap": 0.008609
+  },
+  {
+    "feature": "SBP_std_12h",
+    "mean_abs_shap": 0.008609
+  },
+  {
+    "feature": "HCO3_hours_since_last",
+    "mean_abs_shap": 0.008506
+  },
+  {
+    "feature": "SIRS_Temp_Flag",
+    "mean_abs_shap": 0.008472
+  },
+  {
+    "feature": "O2Sat_mean_12h",
+    "mean_abs_shap": 0.008378
+  },
+  {
+    "feature": "O2Sat_std_4h",
+    "mean_abs_shap": 0.008246
+  },
+  {
+    "feature": "SBP_trend_24h",
+    "mean_abs_shap": 0.008
+  },
+  {
+    "feature": "Hct",
+    "mean_abs_shap": 0.007941
+  },
+  {
+    "feature": "Alkalinephos",
+    "mean_abs_shap": 0.007684
+  },
+  {
+    "feature": "SBP_mean_12h",
+    "mean_abs_shap": 0.007662
+  },
+  {
+    "feature": "Resp_zscore_24h",
+    "mean_abs_shap": 0.00764
+  },
+  {
+    "feature": "Temp_max_4h",
+    "mean_abs_shap": 0.007462
+  },
+  {
+    "feature": "Temp_mean_4h",
+    "mean_abs_shap": 0.007399
+  },
+  {
+    "feature": "HR_std_8h",
+    "mean_abs_shap": 0.007398
+  },
+  {
+    "feature": "MAP_max_12h",
+    "mean_abs_shap": 0.007384
+  },
+  {
+    "feature": "SaO2",
+    "mean_abs_shap": 0.007344
+  },
+  {
+    "feature": "MAP_std_12h",
+    "mean_abs_shap": 0.007287
+  },
+  {
+    "feature": "pH",
+    "mean_abs_shap": 0.007117
+  },
+  {
+    "feature": "Resp_std_12h",
+    "mean_abs_shap": 0.007033
+  },
+  {
+    "feature": "Temp_surge",
+    "mean_abs_shap": 0.007023
+  },
+  {
+    "feature": "SBP_min_12h",
+    "mean_abs_shap": 0.007013
+  },
+  {
+    "feature": "SBP_std_8h",
+    "mean_abs_shap": 0.006804
+  },
+  {
+    "feature": "Resp_max_8h",
+    "mean_abs_shap": 0.006787
+  },
+  {
+    "feature": "O2Sat_min_8h",
+    "mean_abs_shap": 0.006734
+  },
+  {
+    "feature": "SBP_max_8h",
+    "mean_abs_shap": 0.006622
+  },
+  {
+    "feature": "MAP_min_12h",
+    "mean_abs_shap": 0.006581
+  },
+  {
+    "feature": "MAP_std_24h",
+    "mean_abs_shap": 0.006483
+  },
+  {
+    "feature": "O2Sat_min_12h",
+    "mean_abs_shap": 0.006087
+  },
+  {
+    "feature": "HR_mean_4h",
+    "mean_abs_shap": 0.006046
+  },
+  {
+    "feature": "SBP_max_12h",
+    "mean_abs_shap": 0.006029
+  },
+  {
+    "feature": "HR_std_12h",
+    "mean_abs_shap": 0.005917
+  },
+  {
+    "feature": "Resp_mean_8h",
+    "mean_abs_shap": 0.005841
+  },
+  {
+    "feature": "MAP_trend_24h",
+    "mean_abs_shap": 0.005795
+  },
+  {
+    "feature": "MAP_mean_4h",
+    "mean_abs_shap": 0.005758
+  },
+  {
+    "feature": "EtCO2_max_24h",
+    "mean_abs_shap": 0.005656
+  },
+  {
+    "feature": "Resp_mean_4h",
+    "mean_abs_shap": 0.005622
+  },
+  {
+    "feature": "Current_Lab_Count",
+    "mean_abs_shap": 0.005481
+  },
+  {
+    "feature": "HR_min_12h",
+    "mean_abs_shap": 0.005453
+  },
+  {
+    "feature": "DBP_std_24h",
+    "mean_abs_shap": 0.005111
+  },
+  {
+    "feature": "HR_max_4h",
+    "mean_abs_shap": 0.005041
+  },
+  {
+    "feature": "Resp_min_4h",
+    "mean_abs_shap": 0.005035
+  },
+  {
+    "feature": "MAP_min_8h",
+    "mean_abs_shap": 0.005024
+  },
+  {
+    "feature": "SBP_min_8h",
+    "mean_abs_shap": 0.004843
+  },
+  {
+    "feature": "DBP_min_4h",
+    "mean_abs_shap": 0.004735
+  },
+  {
+    "feature": "SOFA_Coag_Score",
+    "mean_abs_shap": 0.004729
+  },
+  {
+    "feature": "DBP_max_8h",
+    "mean_abs_shap": 0.004613
+  },
+  {
+    "feature": "Phosphate",
+    "mean_abs_shap": 0.00441
+  },
+  {
+    "feature": "Temp_zscore_24h",
+    "mean_abs_shap": 0.004222
+  },
+  {
+    "feature": "pH_hours_since_last",
+    "mean_abs_shap": 0.004194
+  },
+  {
+    "feature": "DBP_mean_12h",
+    "mean_abs_shap": 0.004124
+  },
+  {
+    "feature": "Resp_min_8h",
+    "mean_abs_shap": 0.00408
+  },
+  {
+    "feature": "MAP_mean_12h",
+    "mean_abs_shap": 0.004058
+  },
+  {
+    "feature": "Temp_mean_8h",
+    "mean_abs_shap": 0.003953
+  },
+  {
+    "feature": "O2Sat_max_24h",
+    "mean_abs_shap": 0.00393
+  },
+  {
+    "feature": "AST",
+    "mean_abs_shap": 0.003913
+  },
+  {
+    "feature": "DBP_max_12h",
+    "mean_abs_shap": 0.003913
+  },
+  {
+    "feature": "O2Sat_max_12h",
+    "mean_abs_shap": 0.003755
+  },
+  {
+    "feature": "HR_min_4h",
+    "mean_abs_shap": 0.003727
+  },
+  {
+    "feature": "HR_min_8h",
+    "mean_abs_shap": 0.003687
+  },
+  {
+    "feature": "Lab_Density_6h",
+    "mean_abs_shap": 0.00368
+  },
+  {
+    "feature": "DBP_mean_8h",
+    "mean_abs_shap": 0.003679
+  },
+  {
+    "feature": "MAP_std_8h",
+    "mean_abs_shap": 0.003632
+  },
+  {
+    "feature": "O2Sat_std_12h",
+    "mean_abs_shap": 0.003594
+  },
+  {
+    "feature": "Resp_trend_24h",
+    "mean_abs_shap": 0.003484
+  },
+  {
+    "feature": "SBP_zscore_24h",
+    "mean_abs_shap": 0.003417
+  },
+  {
+    "feature": "O2Sat_max_8h",
+    "mean_abs_shap": 0.003332
+  },
+  {
+    "feature": "Fibrinogen",
+    "mean_abs_shap": 0.003331
+  },
+  {
+    "feature": "HR_std_4h",
+    "mean_abs_shap": 0.003188
+  },
+  {
+    "feature": "O2Sat_mean_8h",
+    "mean_abs_shap": 0.003138
+  },
+  {
+    "feature": "Temp_min_8h",
+    "mean_abs_shap": 0.002934
+  },
+  {
+    "feature": "MAP_std_4h",
+    "mean_abs_shap": 0.002921
+  },
+  {
+    "feature": "Temp_mean_12h",
+    "mean_abs_shap": 0.002837
+  },
+  {
+    "feature": "DBP_max_4h",
+    "mean_abs_shap": 0.002743
+  },
+  {
+    "feature": "HR_mean_8h",
+    "mean_abs_shap": 0.002711
+  },
+  {
+    "feature": "MAP_max_8h",
+    "mean_abs_shap": 0.002695
+  },
+  {
+    "feature": "DBP_std_8h",
+    "mean_abs_shap": 0.002593
+  },
+  {
+    "feature": "Potassium_hours_since_last",
+    "mean_abs_shap": 0.002588
+  },
+  {
+    "feature": "DBP_trend_24h",
+    "mean_abs_shap": 0.002471
+  },
+  {
+    "feature": "DBP_mean_4h",
+    "mean_abs_shap": 0.00242
+  },
+  {
+    "feature": "DBP_std_12h",
+    "mean_abs_shap": 0.002406
+  },
+  {
+    "feature": "SBP_max_4h",
+    "mean_abs_shap": 0.002401
+  },
+  {
+    "feature": "BaseExcess",
+    "mean_abs_shap": 0.002371
+  },
+  {
+    "feature": "DBP_trend_12h",
+    "mean_abs_shap": 0.002366
+  },
+  {
+    "feature": "DBP_min_8h",
+    "mean_abs_shap": 0.002243
+  },
+  {
+    "feature": "O2Sat_trend_24h",
+    "mean_abs_shap": 0.002217
+  },
+  {
+    "feature": "EtCO2_std_24h",
+    "mean_abs_shap": 0.00211
+  },
+  {
+    "feature": "EtCO2_std_12h",
+    "mean_abs_shap": 0.001981
+  },
+  {
+    "feature": "EtCO2_mean_12h",
+    "mean_abs_shap": 0.001907
+  },
+  {
+    "feature": "EtCO2_max_12h",
+    "mean_abs_shap": 0.001906
+  },
+  {
+    "feature": "Bilirubin_total",
+    "mean_abs_shap": 0.001873
+  },
+  {
+    "feature": "SIRS_WBC_Flag",
+    "mean_abs_shap": 0.001691
+  },
+  {
+    "feature": "Bilirubin_direct_hours_since_last",
+    "mean_abs_shap": 0.00164
+  },
+  {
+    "feature": "EtCO2_min_24h",
+    "mean_abs_shap": 0.001636
+  },
+  {
+    "feature": "SBP_mean_4h",
+    "mean_abs_shap": 0.001629
+  },
+  {
+    "feature": "EtCO2_mean_24h",
+    "mean_abs_shap": 0.001625
+  },
+  {
+    "feature": "O2Sat_mean_4h",
+    "mean_abs_shap": 0.001518
+  },
+  {
+    "feature": "SBP_trend_12h",
+    "mean_abs_shap": 0.001445
+  },
+  {
+    "feature": "MAP_mean_8h",
+    "mean_abs_shap": 0.001399
+  },
+  {
+    "feature": "Resp_trend_12h",
+    "mean_abs_shap": 0.001305
+  },
+  {
+    "feature": "SBP_delta_4h",
+    "mean_abs_shap": 0.001273
+  },
+  {
+    "feature": "EtCO2_min_8h",
+    "mean_abs_shap": 0.001214
+  },
+  {
+    "feature": "DBP_std_4h",
+    "mean_abs_shap": 0.001181
+  },
+  {
+    "feature": "NEWS_Oxygen_Score",
+    "mean_abs_shap": 0.001132
+  },
+  {
+    "feature": "SBP_mean_8h",
+    "mean_abs_shap": 0.001098
+  },
+  {
+    "feature": "EtCO2_min_12h",
+    "mean_abs_shap": 0.001028
+  },
+  {
+    "feature": "O2Sat",
+    "mean_abs_shap": 0.001024
+  },
+  {
+    "feature": "Resp",
+    "mean_abs_shap": 0.000978
+  },
+  {
+    "feature": "Hct_is_missing",
+    "mean_abs_shap": 0.000901
+  },
+  {
+    "feature": "Bilirubin_direct",
+    "mean_abs_shap": 0.000804
+  },
+  {
+    "feature": "DBP",
+    "mean_abs_shap": 0.000761
+  },
+  {
+    "feature": "MAP_trend_12h",
+    "mean_abs_shap": 0.000741
+  },
+  {
+    "feature": "HR",
+    "mean_abs_shap": 0.000734
+  },
+  {
+    "feature": "O2Sat_trend_12h",
+    "mean_abs_shap": 0.000659
+  },
+  {
+    "feature": "DBP_surge",
+    "mean_abs_shap": 0.000571
+  },
+  {
+    "feature": "HR_delta_4h",
+    "mean_abs_shap": 0.000398
+  },
+  {
+    "feature": "MAP",
+    "mean_abs_shap": 0.000343
+  },
+  {
+    "feature": "O2Sat_max_4h",
+    "mean_abs_shap": 0.000341
+  },
+  {
+    "feature": "EtCO2_std_8h",
+    "mean_abs_shap": 0.000283
+  },
+  {
+    "feature": "SBP_std_4h",
+    "mean_abs_shap": 0.000261
+  },
+  {
+    "feature": "EtCO2_trend_24h",
+    "mean_abs_shap": 0.00026
+  },
+  {
+    "feature": "SBP",
+    "mean_abs_shap": 0.0002
+  },
+  {
+    "feature": "O2Sat_delta_4h",
+    "mean_abs_shap": 0.000193
+  },
+  {
+    "feature": "MAP_surge",
+    "mean_abs_shap": 0.000172
+  },
+  {
+    "feature": "EtCO2_max_8h",
+    "mean_abs_shap": 0.000137
+  },
+  {
+    "feature": "SOFA_Renal_Score",
+    "mean_abs_shap": 0.000126
+  },
+  {
+    "feature": "HR_surge",
+    "mean_abs_shap": 0.000113
+  },
+  {
+    "feature": "SBP_surge",
+    "mean_abs_shap": 5.9e-05
+  },
+  {
+    "feature": "Resp_surge",
+    "mean_abs_shap": 5.5e-05
+  },
+  {
+    "feature": "EtCO2_mean_8h",
+    "mean_abs_shap": 5.4e-05
+  },
+  {
+    "feature": "EtCO2_trend_12h",
+    "mean_abs_shap": 5.3e-05
+  },
+  {
+    "feature": "EtCO2_std_4h",
+    "mean_abs_shap": 5.1e-05
+  },
+  {
+    "feature": "NEWS_SBP_Score",
+    "mean_abs_shap": 4.5e-05
+  },
+  {
+    "feature": "pH_is_missing",
+    "mean_abs_shap": 3.3e-05
+  },
+  {
+    "feature": "Glucose_is_missing",
+    "mean_abs_shap": 1.3e-05
+  },
+  {
+    "feature": "NEWS_Temp_Score",
+    "mean_abs_shap": 7e-06
+  },
+  {
+    "feature": "NEWS_O2Sat_Score",
+    "mean_abs_shap": 6e-06
+  },
+  {
+    "feature": "EtCO2_surge",
+    "mean_abs_shap": 4e-06
+  },
+  {
+    "feature": "Current_Vital_Count",
+    "mean_abs_shap": 1e-06
+  },
+  {
+    "feature": "AST_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Alkalinephos_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "BUN_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "BaseExcess_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Bilirubin_direct_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Bilirubin_total_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Calcium_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Chloride_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Creatinine_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "FiO2_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Fibrinogen_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "HCO3_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Hgb_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Lactate_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Magnesium_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "NEWS_HR_Score",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "O2Sat_surge",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "PTT_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "PaCO2_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Phosphate_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Platelets_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Potassium_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "Resp_delta_4h",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "SIRS_HR_Flag",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "SIRS_Resp_Flag",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "SOFA_Cardio_Score",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "SOFA_Liver_Score",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "SaO2_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "TroponinI_is_missing",
+    "mean_abs_shap": 0.0
+  },
+  {
+    "feature": "WBC_is_missing",
+    "mean_abs_shap": 0.0
+  }
+]

@@ -1,0 +1,73 @@
+{
+  "best_threshold": 0.75,
+  "sweep": [
+    {
+      "threshold": 0.1,
+      "utility": -2.1111
+    },
+    {
+      "threshold": 0.15,
+      "utility": -1.6538
+    },
+    {
+      "threshold": 0.2,
+      "utility": -1.2909
+    },
+    {
+      "threshold": 0.25,
+      "utility": -1.0
+    },
+    {
+      "threshold": 0.3,
+      "utility": -0.7548
+    },
+    {
+      "threshold": 0.35,
+      "utility": -0.5415
+    },
+    {
+      "threshold": 0.4,
+      "utility": -0.3544
+    },
+    {
+      "threshold": 0.45,
+      "utility": -0.1906
+    },
+    {
+      "threshold": 0.5,
+      "utility": -0.0614
+    },
+    {
+      "threshold": 0.55,
+      "utility": 0.0274
+    },
+    {
+      "threshold": 0.6,
+      "utility": 0.0906
+    },
+    {
+      "threshold": 0.65,
+      "utility": 0.1329
+    },
+    {
+      "threshold": 0.7,
+      "utility": 0.1564
+    },
+    {
+      "threshold": 0.75,
+      "utility": 0.1645
+    },
+    {
+      "threshold": 0.8,
+      "utility": 0.1597
+    },
+    {
+      "threshold": 0.85,
+      "utility": 0.1329
+    },
+    {
+      "threshold": 0.9,
+      "utility": 0.0764
+    }
+  ]
+}

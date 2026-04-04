@@ -1,0 +1,36 @@
+{
+  "total_rows": 1552210,
+  "total_features": 272,
+  "n_folds": 3,
+  "best_threshold": 0.75,
+  "fold_results": [
+    {
+      "fold": 1,
+      "train_size": 940250,
+      "val_size": 611960,
+      "threshold": 0.75,
+      "utility_score": 0.2042
+    },
+    {
+      "fold": 2,
+      "train_size": 1078861,
+      "val_size": 473349,
+      "threshold": 0.75,
+      "utility_score": 0.1298
+    },
+    {
+      "fold": 3,
+      "train_size": 1085309,
+      "val_size": 466901,
+      "threshold": 0.75,
+      "utility_score": 0.1323
+    }
+  ],
+  "mean_utility": 0.1554,
+  "top_3_shap_features": [
+    "ICULOS",
+    "FiO2_hours_since_last",
+    "Lactate_hours_since_last"
+  ],
+  "elapsed_seconds": 362.7
+}
