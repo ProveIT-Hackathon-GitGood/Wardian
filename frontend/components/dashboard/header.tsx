@@ -110,8 +110,13 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
 
         {/* Floor & Ward Selection */}
         <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-sm font-semibold truncate max-w-[150px]">{user?.hospital || 'Hospital'}</span>
+            <span className="text-muted-foreground w-px h-4 bg-border" />
+          </div>
+
           <Select value={selectedFloor} onValueChange={setSelectedFloor}>
-            <SelectTrigger className="h-7 w-[140px] text-xs">
+            <SelectTrigger className="h-7 w-[180px] text-xs">
               <SelectValue placeholder="Floor" />
             </SelectTrigger>
             <SelectContent>
@@ -198,49 +203,6 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
           )}
         </div>
 
-        {/* Date Picker */}
-        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant={isCustomDate ? 'default' : 'outline'}
-              size="sm"
-              className="h-7 text-xs gap-1.5 hidden sm:flex"
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              {currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="single"
-              selected={currentDate}
-              onSelect={(date) => {
-                if (date) {
-                  setCurrentDate(date);
-                  setIsDatePickerOpen(false);
-                }
-              }}
-              defaultMonth={currentDate}
-            />
-            {isCustomDate && (
-              <div className="px-3 pb-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-xs" 
-                  onClick={() => {
-                    resetToToday();
-                    setIsDatePickerOpen(false);
-                  }}
-                >
-                  <RotateCcw className="w-3 h-3 mr-1.5" />
-                  Reset to Today
-                </Button>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
-
         {/* Actions */}
         <div className="flex items-center gap-1">
           <Link href="/dashboard/analytics">
@@ -275,13 +237,31 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
                 <span className="sr-only">User menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-auto min-w-[200px]">
               <DropdownMenuLabel className="py-1.5">
                 <div className="flex flex-col">
                   <span className="text-xs font-medium">{user?.name || 'User'}</span>
                   <span className="text-[10px] font-normal text-muted-foreground capitalize">{user?.role || ''}</span>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="p-1">
+                <Calendar
+                  mode="single"
+                  selected={currentDate}
+                  onSelect={(date) => date && setCurrentDate(date)}
+                  defaultMonth={currentDate}
+                  className="scale-90 origin-top"
+                />
+                {isCustomDate && (
+                  <div className="px-3 pb-2 pt-1">
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetToToday}>
+                      <RotateCcw className="w-3 h-3 mr-1.5" />
+                      Reset to Today
+                    </Button>
+                  </div>
+                )}
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild className="text-xs">
                 <Link href="/dashboard/analytics" className="cursor-pointer">

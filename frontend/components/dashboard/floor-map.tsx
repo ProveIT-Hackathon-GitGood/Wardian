@@ -301,11 +301,11 @@ export function FloorMap() {
         {/* Ward Tabs - Inline */}
         <div className="flex items-center gap-1 mt-3 overflow-x-auto">
           {currentFloor?.wards.map((ward) => (
-            <div key={ward.id} className="flex items-center">
+            <div key={ward.id} className="flex items-center h-7">
               <button
                 onClick={() => setSelectedWard(ward.id)}
                 className={cn(
-                  'px-3 py-1.5 text-xs font-medium rounded-l transition-colors',
+                  'px-3 h-full text-xs font-medium rounded-l transition-colors',
                   selectedWard === ward.id
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -317,7 +317,7 @@ export function FloorMap() {
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
-                      'px-1.5 py-1.5 rounded-r border-l transition-colors',
+                      'px-1.5 h-full rounded-r border-l transition-colors flex items-center justify-center',
                       selectedWard === ward.id
                         ? 'bg-primary text-primary-foreground border-primary-foreground/20'
                         : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
