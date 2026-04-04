@@ -8,7 +8,7 @@ class PatientBase(BaseModel):
     bed_id: Optional[int] = None
     name: str
     Age: int
-    Gender: str
+    gender: str
     cnp: str
     phone_number: str
     emergency_contact_name: str
@@ -31,8 +31,8 @@ class PatientCreateSchema(PatientBase):
 class PatientUpdateSchema(BaseModel):
     bed_id: Optional[int] = None
     name: Optional[str] = None
-    Age: Optional[int] = None
-    Gender: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
     is_active: Optional[bool] = None
     cnp: Optional[str] = None
     phone_number: Optional[str] = None
