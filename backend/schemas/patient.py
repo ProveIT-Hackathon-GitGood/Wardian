@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class PatientBase(BaseModel):
     bed_id: Optional[int] = None
     name: str
-    Age: int
+    age: int
     gender: str
     cnp: str
     phone_number: str
