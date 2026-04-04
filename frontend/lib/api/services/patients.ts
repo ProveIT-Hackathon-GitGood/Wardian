@@ -26,4 +26,3 @@ export async function uploadPatientFile(file: File): Promise<{ filename: string;
   formData.append('file', file);
   return apiUpload<{ filename: string; url: string }>('/api/v1/patient/upload', formData, true);
 }
-

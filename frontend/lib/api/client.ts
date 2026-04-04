@@ -122,4 +122,3 @@ export async function apiUpload<T>(path: string, formData: FormData, auth = fals
   });
   return handleResponse<T>(res);
 }
-

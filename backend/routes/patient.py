@@ -60,8 +60,11 @@ def add_patient_history(patient_id: int, request: PatientHistoryCreateSchema, db
     return patient_service.add_patient_history(db, patient_id, request)
 
 @patient_router.patch("/{patient_id}", response_model=PatientResponseSchema)
-def update_patient(patient_id: int, request: PatientUpdateSchema, db: db_dependency, user_data=Depends(get_current_user)):
+def update_patient(patient_id: int, request: PatientUpdateSchema, db: db_dependency,
+                   user_data=Depends(get_current_user)):
     return patient_service.update_patient(db, patient_id, request)
+
+
 @patient_router.delete("/{patient_id}", status_code=status.HTTP_200_OK)
 def delete_patient(patient_id: int, db: db_dependency, user_data=Depends(get_current_user)):
     return patient_service.delete_patient(db, patient_id)

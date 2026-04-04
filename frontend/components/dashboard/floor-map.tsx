@@ -613,7 +613,6 @@ export function FloorMap() {
                   </div>
                 </div>
               </fieldset>
-
               <fieldset>
                 <legend className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Emergency Contact</legend>
                 <div className="grid grid-cols-2 gap-3">
@@ -627,7 +626,6 @@ export function FloorMap() {
                   </div>
                 </div>
               </fieldset>
-
               <fieldset>
                 <legend className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Clinical Information</legend>
                 <div className="grid gap-3">
@@ -668,7 +666,6 @@ export function FloorMap() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* Assign Patient Dialog */}
       <Dialog open={!!showAssignPatientDialog} onOpenChange={() => setShowAssignPatientDialog(null)}>
         <DialogContent className="sm:max-w-sm">
@@ -708,7 +705,6 @@ export function FloorMap() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Remove Patient Confirmation */}
       <Dialog open={!!showRemovePatientConfirm} onOpenChange={() => setShowRemovePatientConfirm(null)}>
         <DialogContent className="sm:max-w-sm">
@@ -827,7 +823,6 @@ function WardFloorPlan({
           Nurses Station
         </div>
       </div>
-
       {/* Floor Plan Grid */}
       <div className="grid grid-cols-[1fr_40px_1fr] gap-1 min-w-[500px]">
         {/* Left Side */}
@@ -851,10 +846,8 @@ function WardFloorPlan({
             />
           ))}
         </div>
-
         {/* Corridor */}
         <div className="bg-muted/50 rounded" />
-
         {/* Right Side */}
         <div className="space-y-1">
           {rightBeds.map((bed) => (

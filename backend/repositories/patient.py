@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from models.patient import Patient, PatientHistory
 from schemas.patient import PatientCreateSchema, PatientUpdateSchema, PatientHistoryCreateSchema
 
+
 class PatientRepository:
     def get_patients(self, db: Session):
         return db.query(Patient).all()
@@ -15,6 +16,7 @@ class PatientRepository:
         db.commit()
         db.refresh(db_history)
         return db_history
+
     def create_patient(self, db: Session, patient_data: PatientCreateSchema):
         db_patient = Patient(**patient_data.model_dump())
         db.add(db_patient)
@@ -26,11 +28,11 @@ class PatientRepository:
         db_patient = self.get_patient(db, patient_id)
         if not db_patient:
             return None
-        
+
         update_data = patient_data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_patient, key, value)
-            
+
         db.commit()
         db.refresh(db_patient)
         return db_patient
@@ -39,7 +41,7 @@ class PatientRepository:
         db_patient = self.get_patient(db, patient_id)
         if not db_patient:
             return False
-            
+
         db.delete(db_patient)
         db.commit()
         return True
