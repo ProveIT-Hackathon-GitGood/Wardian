@@ -35,9 +35,11 @@ import {
   Pencil,
   Pill,
   Plus,
+  Printer,
   Stethoscope,
   TestTube,
   Thermometer,
+  Trash2,
   Download,
   Upload,
   User,
@@ -66,6 +68,9 @@ export function PatientDossier({ patient, onClose }: PatientDossierProps) {
   const [isRunningAnalysis, setIsRunningAnalysis] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [entrySaved, setEntrySaved] = useState(false);
+
+  const [patientReports, setPatientReports] = useState<{ id: string; label: string; timestamp: string; url: string }[]>([]);
+  const [isGeneratingPatientReport, setIsGeneratingPatientReport] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -199,6 +204,216 @@ export function PatientDossier({ patient, onClose }: PatientDossierProps) {
     });
   };
 
+  const handleGeneratePatientReport = async () => {
+    setIsGeneratingPatientReport(true);
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pw = doc.internal.pageSize.getWidth();
+    const m = 18;
+    let y = 20;
+
+    const checkPage = (needed: number) => { if (y + needed > 275) { doc.addPage(); y = 20; } };
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text('Patient Report', m, y);
+    y += 7;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, m, y);
+    doc.text('Wardian Hospital Management System', pw - m, y, { align: 'right' });
+    y += 4;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(m, y, pw - m, y);
+    y += 8;
+
+    // Patient info
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text(patient.name, m, y);
+
+    const statusLabel = patient.status.charAt(0).toUpperCase() + patient.status.slice(1);
+    const sColor = patient.status === 'critical' ? [220, 38, 38] : patient.status === 'warning' ? [217, 119, 6] : [5, 150, 105];
+    doc.setFontSize(9);
+    doc.setTextColor(sColor[0], sColor[1], sColor[2]);
+    doc.text(`${statusLabel} — Sepsis Risk: ${patient.sepsisRiskScore}%`, pw - m, y, { align: 'right' });
+    y += 8;
+
+    // Info grid
+    doc.setFontSize(9);
+    const infoRows = [
+      ['Age / Gender', `${patient.age} y/o ${patient.gender === 'M' ? 'Male' : 'Female'}`, 'Bed', patient.bedNumber],
+      ['Diagnosis', patient.diagnosis, 'Attending', patient.attendingPhysician],
+      ['Admission Date', patient.admissionDate, 'Blood Type', patient.bloodType || 'N/A'],
+      ['CNP', patient.cnp || 'N/A', 'Phone', patient.phoneNumber || 'N/A'],
+      ['Emergency Contact', patient.emergencyContactName || 'N/A', 'Emergency Phone', patient.emergencyContactPhone || 'N/A'],
+      ['Allergies', patient.allergies || 'None reported', '', ''],
+    ];
+
+    for (const row of infoRows) {
+      checkPage(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(100, 116, 139);
+      doc.text(row[0], m, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 41, 59);
+      doc.text(row[1], m + 35, y, { maxWidth: 50 });
+      if (row[2]) {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100, 116, 139);
+        doc.text(row[2], pw / 2 + 5, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(30, 41, 59);
+        doc.text(row[3], pw / 2 + 40, y, { maxWidth: 50 });
+      }
+      y += 6;
+    }
+    y += 4;
+
+    // Current vitals
+    checkPage(20);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(m, y, pw - m, y);
+    y += 6;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text('Current Vitals', m, y);
+    y += 7;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 41, 59);
+    const vitals = [
+      `Heart Rate: ${patient.vitals.heartRate} bpm`,
+      `Temperature: ${patient.vitals.temperature.toFixed(1)}°C`,
+      `Blood Pressure: ${patient.vitals.bloodPressure}`,
+      `SpO2: ${patient.vitals.oxygenSaturation}%`,
+      `Respiratory Rate: ${patient.vitals.respiratoryRate} /min`,
+    ];
+    const vColW = (pw - m * 2) / 3;
+    for (let i = 0; i < vitals.length; i++) {
+      const col = i % 3;
+      if (i > 0 && col === 0) y += 6;
+      doc.text(vitals[i], m + col * vColW, y);
+    }
+    y += 10;
+
+    // AI Insight
+    if (patient.aiInsight) {
+      checkPage(20);
+      doc.setFillColor(241, 245, 249);
+      const insightLines = doc.splitTextToSize(patient.aiInsight, pw - m * 2 - 8);
+      doc.roundedRect(m, y - 3, pw - m * 2, insightLines.length * 4.5 + 10, 2, 2, 'F');
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 58, 95);
+      doc.text('AI Insight', m + 4, y + 2);
+      y += 7;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text(insightLines, m + 4, y);
+      y += insightLines.length * 4.5 + 6;
+    }
+
+    // Medical history
+    checkPage(15);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(m, y, pw - m, y);
+    y += 6;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 58, 95);
+    doc.text(`Medical History (${patient.medicalHistory.length} events)`, m, y);
+    y += 8;
+
+    if (patient.medicalHistory.length === 0) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(148, 163, 184);
+      doc.text('No medical history entries recorded.', m, y);
+    } else {
+      for (const event of patient.medicalHistory) {
+        checkPage(20);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(`${event.date} ${event.time}`, m, y);
+        doc.setTextColor(30, 58, 95);
+        doc.text(`${event.title} [${event.type}]`, m + 30, y);
+        y += 5;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        const descLines = doc.splitTextToSize(event.description, pw - m * 2 - 30);
+        doc.text(descLines, m + 30, y);
+        y += descLines.length * 4.5;
+
+        if (event.details) {
+          const detLines = doc.splitTextToSize(`Notes: ${event.details}`, pw - m * 2 - 30);
+          doc.setTextColor(100, 116, 139);
+          doc.text(detLines, m + 30, y);
+          y += detLines.length * 4.5;
+        }
+        if (event.surgeryType) {
+          doc.setTextColor(100, 116, 139);
+          doc.text(`Surgery: ${event.surgeryType}`, m + 30, y);
+          y += 5;
+        }
+        if (event.attachments && event.attachments.length > 0) {
+          doc.setTextColor(100, 116, 139);
+          doc.text(`Attachments: ${event.attachments.map(a => a.name).join(', ')}`, m + 30, y);
+          y += 5;
+        }
+        y += 3;
+      }
+    }
+
+    // Footer on all pages
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(148, 163, 184);
+      doc.text('Wardian — Confidential Patient Report', m, 290);
+      doc.text(`Page ${i} of ${totalPages}`, pw - m, 290, { align: 'right' });
+    }
+
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const now = new Date();
+
+    setPatientReports(prev => [{
+      id: `pr-${Date.now()}`,
+      label: `Report — ${now.toLocaleDateString()}`,
+      timestamp: now.toLocaleString(),
+      url,
+    }, ...prev]);
+
+    setIsGeneratingPatientReport(false);
+  };
+
+  const handleDownloadPatientReport = (report: { url: string; label: string; id: string }) => {
+    const a = document.createElement('a');
+    a.href = report.url;
+    a.download = `wardian-${patient.name.replace(/\s+/g, '-').toLowerCase()}-${report.id}.pdf`;
+    a.click();
+  };
+
+  const handleDeletePatientReport = (id: string) => {
+    setPatientReports(prev => {
+      const target = prev.find(r => r.id === id);
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter(r => r.id !== id);
+    });
+  };
+
   const statusConfig = {
     stable: {
       label: 'Stable',
@@ -259,6 +474,7 @@ export function PatientDossier({ patient, onClose }: PatientDossierProps) {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="input">Data Input</TabsTrigger>
                 <TabsTrigger value="history">Medical History</TabsTrigger>
+                <TabsTrigger value="reports">Reports</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -633,6 +849,94 @@ export function PatientDossier({ patient, onClose }: PatientDossierProps) {
                             <TimelineEvent key={event.id} event={event} isLast={index === patient.medicalHistory.length - 1} />
                           ))}
                         </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Reports Tab */}
+              <TabsContent value="reports" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2">
+                      <Printer className="w-5 h-5" />
+                      Generate Patient Report
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Generate a comprehensive PDF report containing patient information, current vitals, AI insights, and full medical history.
+                    </p>
+                    <Button
+                      onClick={handleGeneratePatientReport}
+                      disabled={isGeneratingPatientReport}
+                      className="w-full gap-2"
+                    >
+                      {isGeneratingPatientReport ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                          Generating Report...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4" />
+                          Generate PDF Report
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        Report History
+                      </CardTitle>
+                      {patientReports.length > 0 && (
+                        <Badge variant="outline" className="text-xs">{patientReports.length}</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {patientReports.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No reports generated yet. Use the button above to create one.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {patientReports.map((report) => (
+                          <div
+                            key={report.id}
+                            className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+                          >
+                            <FileText className="w-5 h-5 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{report.label}</p>
+                              <p className="text-xs text-muted-foreground">{report.timestamp}</p>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleDownloadPatientReport(report)}
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleDeletePatientReport(report.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
