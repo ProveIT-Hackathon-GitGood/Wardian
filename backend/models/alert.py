@@ -4,6 +4,7 @@ import enum
 from sqlalchemy import Enum as SQLEnum, DateTime, Boolean
 
 from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy.orm import relationship
 
 from database import Base
 
@@ -27,3 +28,5 @@ class Alert(Base):
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     is_ready = Column(Boolean, default=False)
+
+    patient = relationship("Patient", lazy="joined")
