@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class AlertTypes(enum.Enum):
+class AlertTypes(str, enum.Enum):
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
     INFO = "INFO"

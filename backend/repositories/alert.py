@@ -26,3 +26,6 @@ class AlertRepository:
         db.delete(alert)
         db.commit()
         return True
+
+    def get_all_alerts(self, db: Session):
+        return db.query(Alert).all()
