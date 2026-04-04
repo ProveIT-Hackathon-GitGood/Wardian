@@ -9,6 +9,8 @@ import models.patient as patient_model
 import models.medical_staff as medical_staff_model
 
 from database import engine
+from exceptions.handlers import register_exception_handlers
+from routes.auth import auth_router
 from routes.bed import bed_router
 from routes.department import department_router
 from routes.hospital import hospital_router
@@ -30,13 +32,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+register_exception_handlers(app)
 app.include_router(bed_router)
 app.include_router(department_router)
 app.include_router(hospital_router)
 app.include_router(medical_staff_router)
 app.include_router(patient_router)
 app.include_router(ward_router)
+app.include_router(auth_router)
 
 bed_model.Base.metadata.create_all(bind=engine)
 department_model.Base.metadata.create_all(bind=engine)

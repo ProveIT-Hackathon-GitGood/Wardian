@@ -1,14 +1,24 @@
+import enum
 from typing import Optional
 
 from pydantic import BaseModel
 
 
+class StaffRole(str, enum.Enum):
+    DOCTOR = "doctor"
+    NURSE = "nurse"
+
+
 class MedicalStaffBase(BaseModel):
+    email: str
+    full_name: str
     department_id: int
     hospital_id: int
+    role: StaffRole
 
 
 class MedicalStaffCreateSchema(MedicalStaffBase):
+    password: str
     pass
 
 

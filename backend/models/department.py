@@ -13,4 +13,4 @@ class Department(Base):
 
     hospital = relationship("Hospital", back_populates="departments")
     wards = relationship("Ward", back_populates="department")
-    staff = relationship("MedicalStaff", back_populates="department")
+    medical_staff = relationship("MedicalStaff", back_populates="department")

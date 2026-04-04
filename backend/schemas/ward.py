@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class WardBase(BaseModel):
     department_id: int
-    room_number: str
+    ward_number: str
 
 
 class WardCreateSchema(WardBase):
@@ -14,7 +14,7 @@ class WardCreateSchema(WardBase):
 
 class WardUpdateSchema(BaseModel):
     department_id: Optional[int] = None
-    room_number: Optional[str] = None
+    ward_number: Optional[str] = None
 
 
 class WardResponseSchema(WardBase):
