@@ -6,8 +6,8 @@ from decouple import config
 POSTGRES_USER = config("POSTGRES_USER")
 POSTGRES_PASS = config("POSTGRES_PASS")
 POSTGRES_DB = config("POSTGRES_DB")
-POSTGRES_HOST = config("POSTGRES_HOST", default="db")
-POSTGRES_PORT = config("POSTGRES_PORT", cast=str, default="5432")
+POSTGRES_HOST = config("POSTGRES_HOST", default="localhost")
+POSTGRES_PORT = config("POSTGRES_PORT", cast=str, default="5433")
 
 SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASS}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
