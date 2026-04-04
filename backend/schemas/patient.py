@@ -7,8 +7,8 @@ from pydantic import BaseModel
 class PatientBase(BaseModel):
     bed_id: Optional[int] = None
     name: str
-    age: int
-    gender: str
+    Age: int
+    Gender: str
     cnp: str
     phone_number: str
     emergency_contact_name: str
@@ -31,8 +31,8 @@ class PatientCreateSchema(PatientBase):
 class PatientUpdateSchema(BaseModel):
     bed_id: Optional[int] = None
     name: Optional[str] = None
-    age: Optional[int] = None
-    gender: Optional[str] = None
+    Age: Optional[int] = None
+    Gender: Optional[str] = None
     is_active: Optional[bool] = None
     cnp: Optional[str] = None
     phone_number: Optional[str] = None
@@ -52,34 +52,75 @@ class PatientResponseSchema(PatientBase):
 
 class PatientVitalBase(BaseModel):
     patient_id: int
-    heart_rate: Optional[float] = None
-    lactate: Optional[float] = None
-    blood_pressure: Optional[float] = None
-    oxygen_saturation: Optional[float] = None
-    respiratory_rate: Optional[float] = None
-    recorded_at: Optional[datetime] = None
+    timestamp: Optional[datetime] = None
+    hour: Optional[float] = None
+
+    # Vitals
+    HR: Optional[float] = None
+    O2Sat: Optional[float] = None
+    Temp: Optional[float] = None
+    SBP: Optional[float] = None
+    MAP: Optional[float] = None
+    DBP: Optional[float] = None
+    Resp: Optional[float] = None
+    EtCO2: Optional[float] = None
+
+    # Labs
+    BaseExcess: Optional[float] = None
+    HCO3: Optional[float] = None
+    FiO2: Optional[float] = None
+    pH: Optional[float] = None
+    PaCO2: Optional[float] = None
+    SaO2: Optional[float] = None
+    AST: Optional[float] = None
+    BUN: Optional[float] = None
+    Alkalinephos: Optional[float] = None
+    Calcium: Optional[float] = None
+    Chloride: Optional[float] = None
+    Creatinine: Optional[float] = None
+    Bilirubin_direct: Optional[float] = None
+    Glucose: Optional[float] = None
+    Lactate: Optional[float] = None
+    Magnesium: Optional[float] = None
+    Phosphate: Optional[float] = None
+    Potassium: Optional[float] = None
+    Bilirubin_total: Optional[float] = None
+    TroponinI: Optional[float] = None
+    Hct: Optional[float] = None
+    Hgb: Optional[float] = None
+    PTT: Optional[float] = None
+    WBC: Optional[float] = None
+    Fibrinogen: Optional[float] = None
+    Platelets: Optional[float] = None
+
+    # Context
+    Unit1: Optional[float] = None
+    Unit2: Optional[float] = None
+    HospAdmTime: Optional[float] = None
+    ICULOS: Optional[float] = None
 
 
 class PatientVitalCreateSchema(PatientVitalBase):
-    heart_rate: float
-    lactate: float
-    blood_pressure: float
-    oxygen_saturation: float
-    respiratory_rate: float
+    pass
 
 
 class PatientVitalUpdateSchema(BaseModel):
-    heart_rate: Optional[float] = None
-    lactate: Optional[float] = None
-    blood_pressure: Optional[float] = None
-    oxygen_saturation: Optional[float] = None
-    respiratory_rate: Optional[float] = None
-    recorded_at: Optional[datetime] = None
+    patient_id: Optional[int] = None
+    timestamp: Optional[datetime] = None
+    hour: Optional[float] = None
+    HR: Optional[float] = None
+    O2Sat: Optional[float] = None
+    Temp: Optional[float] = None
+    SBP: Optional[float] = None
+    MAP: Optional[float] = None
+    DBP: Optional[float] = None
+    Resp: Optional[float] = None
+    EtCO2: Optional[float] = None
+    Lactate: Optional[float] = None
 
 
 class PatientVitalResponseSchema(PatientVitalBase):
     id: int
-    timestamp: Optional[datetime] = None
 
     class Config:
         from_attributes = True
