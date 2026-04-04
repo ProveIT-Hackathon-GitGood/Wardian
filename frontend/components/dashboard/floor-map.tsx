@@ -123,9 +123,9 @@ export function FloorMap() {
       ? wardPatients
       : wardPatients.filter((p) => p.status === statusFilter);
 
-  const handleAddWard = () => {
+  const handleAddWard = async () => {
     if (newWardName.trim()) {
-      addWard(selectedFloor, newWardName.trim());
+      await addWard(selectedFloor, newWardName.trim());
       setNewWardName('');
       setShowAddWardDialog(false);
     }
@@ -144,8 +144,9 @@ export function FloorMap() {
     try {
       const nextBedNum = wardBeds.length + 1;
       const bedNumber = String(nextBedNum).padStart(2, '0');
+      const wardBackendId = parseInt(selectedWard.replace('ward-', ''), 10);
       const res = await bedsApi.createBed({
-        ward_id: 1,
+        ward_id: wardBackendId,
         bed_number: bedNumber,
       });
       addBed(selectedWard, res.id);

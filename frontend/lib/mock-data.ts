@@ -61,6 +61,7 @@ export interface Ward {
   id: string;
   name: string;
   floor: string;
+  backendId?: number;
 }
 
 export interface Floor {

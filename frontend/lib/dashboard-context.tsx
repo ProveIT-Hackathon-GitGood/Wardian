@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { MOCK_ALERTS, FLOORS, type Patient, type Alert, type Floor, type Ward } from './mock-data';
-import { apiGet } from './api/client';
+import { MOCK_ALERTS, type Patient, type Alert, type Floor, type Ward } from './mock-data';
+import { apiGet, apiPost } from './api/client';
+import type { WardResponse, WardCreateRequest, DepartmentResponse } from './api/types';
 
 interface BackendBed {
   id: number;
@@ -58,7 +59,7 @@ interface DashboardContextType {
   setHighlightedBed: (bed: string | null) => void;
   markAlertAsRead: (alertId: string) => void;
   unreadAlertCount: number;
-  addWard: (floorId: string, wardName: string) => void;
+  addWard: (floorId: string, wardName: string) => Promise<void>;
   deleteWard: (floorId: string, wardId: string) => void;
   addBed: (wardId: string, backendId?: number) => void;
   deleteBed: (bedId: string) => void;
@@ -76,31 +77,63 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-
 // Generate initials from name
 function generateInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [selectedFloor, setSelectedFloor] = useState(FLOORS[0].id);
-  const [selectedWard, setSelectedWard] = useState(FLOORS[0].wards[0].id);
+  const [selectedFloor, setSelectedFloor] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedBed, setHighlightedBed] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
-  const [floors, setFloors] = useState<Floor[]>(FLOORS);
+  const [floors, setFloors] = useState<Floor[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [backendBeds, backendPatients] = await Promise.all([
-          apiGet<BackendBed[]>('/api/v1/bed', true),
-          apiGet<BackendPatient[]>('/api/v1/patient', true)
+        const [backendBeds, backendPatients, backendWards, backendDepartments] = await Promise.all([
+          apiGet<BackendBed[]>('/api/v1/bed/', true),
+          apiGet<BackendPatient[]>('/api/v1/patient/', true),
+          apiGet<WardResponse[]>('/api/v1/ward/', true),
+          apiGet<DepartmentResponse[]>('/api/v1/department/', true),
         ]);
 
+        // Build floors from departments + wards
+        const builtFloors: Floor[] = backendDepartments.map(dept => {
+          const deptWards: Ward[] = backendWards
+            .filter(w => w.department_id === dept.id)
+            .map(w => ({
+              id: `ward-${w.id}`,
+              name: w.ward_number,
+              floor: dept.name,
+              backendId: w.id,
+            }));
+          return {
+            id: `floor-${dept.id}`,
+            name: dept.name,
+            wards: deptWards,
+          };
+        });
+
+        // Only keep floors that have wards
+        const floorsWithWards = builtFloors.filter(f => f.wards.length > 0);
+        // If all departments are empty, still show them so user can add wards
+        const finalFloors = floorsWithWards.length > 0 ? builtFloors : builtFloors;
+
+        setFloors(finalFloors);
+        if (finalFloors.length > 0) {
+          setSelectedFloor(finalFloors[0].id);
+          if (finalFloors[0].wards.length > 0) {
+            setSelectedWard(finalFloors[0].wards[0].id);
+          }
+        }
+
+        // Map patients
         const mappedPatients: Patient[] = backendPatients.map(bp => ({
           id: `patient-${bp.id}`,
           backendId: bp.id,
@@ -129,6 +162,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           allergies: bp.allergies,
         }));
 
+        // Map beds — use the ward's frontend ID
         const newBeds: Bed[] = backendBeds.map(bb => {
           const patientData = backendPatients.find(bp => bp.bed_id === bb.id);
           const mappedPatient = patientData ? mappedPatients.find(p => p.backendId === patientData.id) : undefined;
@@ -139,7 +173,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             id: `bed-${bb.id}`,
             backendId: bb.id,
             bedNumber: bb.bed_number,
-            wardId: 'ward-a',
+            wardId: `ward-${bb.ward_id}`,
             patient: mappedPatient
           };
         });
@@ -158,6 +192,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     loadData();
   }, []);
 
+  // When floor changes, auto-select the first ward of that floor
+  useEffect(() => {
+    if (!selectedFloor || floors.length === 0) return;
+    const floor = floors.find(f => f.id === selectedFloor);
+    if (floor && floor.wards.length > 0) {
+      // Only change ward if current ward isn't in this floor
+      const currentWardInFloor = floor.wards.some(w => w.id === selectedWard);
+      if (!currentWardInFloor) {
+        setSelectedWard(floor.wards[0].id);
+      }
+    }
+  }, [selectedFloor, floors]);
+
   const markAlertAsRead = useCallback((alertId: string) => {
     setAlerts((prev) =>
       prev.map((alert) =>
@@ -166,24 +213,56 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const addWard = useCallback((floorId: string, wardName: string) => {
-    setFloors((prev) =>
-      prev.map((floor) => {
-        if (floor.id === floorId) {
-          const newWardId = `ward-${Date.now()}`;
-          const newWard: Ward = {
-            id: newWardId,
-            name: wardName,
-            floor: floor.name.split(' - ')[0],
-          };
-          return {
-            ...floor,
-            wards: [...floor.wards, newWard],
-          };
-        }
-        return floor;
-      })
-    );
+  const addWard = useCallback(async (floorId: string, wardName: string) => {
+    // Extract backend department ID from the floor ID (format: "floor-{id}")
+    const departmentId = parseInt(floorId.replace('floor-', ''), 10);
+
+    try {
+      const created = await apiPost<WardResponse>('/api/v1/ward/', {
+        department_id: departmentId,
+        ward_number: wardName,
+      } as WardCreateRequest, true);
+
+      const newWard: Ward = {
+        id: `ward-${created.id}`,
+        name: created.ward_number,
+        floor: '',
+      };
+
+      setFloors((prev) =>
+        prev.map((floor) => {
+          if (floor.id === floorId) {
+            newWard.floor = floor.name.split(' - ')[0];
+            return {
+              ...floor,
+              wards: [...floor.wards, newWard],
+            };
+          }
+          return floor;
+        })
+      );
+    } catch (err) {
+      console.error('Failed to create ward on backend', err);
+      // Fallback: add locally anyway
+      const newWardId = `ward-${Date.now()}`;
+      const newWard: Ward = {
+        id: newWardId,
+        name: wardName,
+        floor: '',
+      };
+      setFloors((prev) =>
+        prev.map((floor) => {
+          if (floor.id === floorId) {
+            newWard.floor = floor.name.split(' - ')[0];
+            return {
+              ...floor,
+              wards: [...floor.wards, newWard],
+            };
+          }
+          return floor;
+        })
+      );
+    }
   }, []);
 
   const deleteWard = useCallback((floorId: string, wardId: string) => {
