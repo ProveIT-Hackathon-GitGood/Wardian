@@ -11,3 +11,8 @@ db_dependency = Annotated[Session, Depends(get_db)]
 department_service = DepartmentService()
 
 department_router = APIRouter(prefix="/api/v1/department", tags=["department"])
+
+
+@department_router.get("/")
+async def root():
+    return {"message": "Hello World"}

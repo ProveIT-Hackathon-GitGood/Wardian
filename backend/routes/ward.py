@@ -11,3 +11,8 @@ db_dependency = Annotated[Session, Depends(get_db)]
 ward_service = WardService()
 
 ward_router = APIRouter(prefix="/api/v1/ward", tags=["ward"])
+
+
+@ward_router.get("/")
+async def root():
+    return {"message": "Hello World"}

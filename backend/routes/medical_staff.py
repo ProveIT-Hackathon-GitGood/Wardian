@@ -10,4 +10,9 @@ db_dependency = Annotated[Session, Depends(get_db)]
 
 medical_staff_service = MedicalStaffService()
 
-medical_router = APIRouter(prefix="/api/v1/medical-staff", tags=["medical-staff"])
+medical_staff_router = APIRouter(prefix="/api/v1/medical-staff", tags=["medical-staff"])
+
+
+@medical_staff_router.get("/")
+async def root():
+    return {"message": "Hello World"}

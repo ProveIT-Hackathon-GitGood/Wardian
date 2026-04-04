@@ -11,3 +11,8 @@ db_dependency = Annotated[Session, Depends(get_db)]
 bed_service = BedService()
 
 bed_router = APIRouter(prefix="/api/v1/bed", tags=["bed"])
+
+
+@bed_router.get("/")
+async def root():
+    return {"message": "Hello World"}
