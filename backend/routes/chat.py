@@ -15,5 +15,5 @@ chat_router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 
 
 @chat_router.post("")
-def chat_with_copilot(request: ChatRequest, db: db_dependency):
-    return chat_service.generate_response(db, request.patient_id, request.messages)
+async def chat_with_copilot(request: ChatRequest, db: db_dependency):
+    return await chat_service.generate_response(db, request.patient_id, request.messages)

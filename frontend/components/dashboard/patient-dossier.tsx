@@ -8,20 +8,8 @@ import {Badge} from '@/components/ui/badge';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {Textarea} from '@/components/ui/textarea';
 import {Label} from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {
     Activity,
@@ -31,6 +19,7 @@ import {
     ChevronDown,
     ChevronRight,
     Clock,
+    Download,
     FileText,
     Heart,
     Pencil,
@@ -41,12 +30,11 @@ import {
     TestTube,
     Thermometer,
     Trash2,
-    Download,
     Upload,
     User,
     Wind,
     X,
-    Zap, Bot,
+    Zap,
 } from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {cn} from '@/lib/utils';
@@ -54,6 +42,7 @@ import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} fr
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
+import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 interface PatientDossierProps {
     patient: Patient;
@@ -1036,21 +1025,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                                 </Card>
                             </TabsContent>
                             <TabsContent value="assistant" className="space-y-3">
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Bot className="w-5 h-5"/>
-                                            Talk with the AI assistant
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Ask questions about the patient's condition, get explanations of medical
-                                            terms, or seek recommendations for next steps based on the current data.
-                                        </p>
-                                    </CardContent>
-                                </Card>
-
+                                <AIChatPanel patient={patient}/>
                             </TabsContent>
                         </Tabs>
                     </div>
