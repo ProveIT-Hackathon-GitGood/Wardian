@@ -52,7 +52,7 @@ function buildUserFromToken(token: string, extra?: Partial<User>): User | null {
   return {
     id: String(payload.id ?? ''),
     email: (payload.email as string) ?? '',
-    name: extra?.name ?? (payload.email as string) ?? '',
+    name: extra?.name ?? (payload.full_name as string) ?? (payload.email as string) ?? '',
     role: (payload.role as User['role']) ?? 'doctor',
     hospital: extra?.hospital ?? '',
     hospitalId: extra?.hospitalId ?? 0,

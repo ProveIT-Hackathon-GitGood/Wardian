@@ -18,7 +18,7 @@ class AuthService:
             raise AppException("User not found", 404)
         if not user_repository.authenticate_user(user.password.get_secret_value(), existing_user.password):
             raise AppException("Invalid credentials", 401)
-        return sign_jwt(existing_user.email, existing_user.id, existing_user.role)
+        return sign_jwt(existing_user.email, existing_user.id, existing_user.role, existing_user.full_name or "")
 
     def register_account(self, user: CreateMedicalStaffSchema, db: Session):
         if employee_code_repository.verify_employee_code(user.employee_code, db) is False:

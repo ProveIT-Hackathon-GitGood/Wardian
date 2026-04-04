@@ -15,11 +15,12 @@ def token_response(token: str):
     }
 
 
-def sign_jwt(email: str, id: str, user_role: int):
+def sign_jwt(email: str, id: str, user_role: int, full_name: str = ""):
     payload = {
         "email": email,
         "id": str(id),
         "role": user_role,
+        "full_name": full_name,
         "expiry": time.time() + 3600
     }
 

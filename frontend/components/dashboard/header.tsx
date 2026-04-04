@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -19,17 +17,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import {
   Bell,
   BarChart3,
+  CalendarDays,
   LogOut,
+  RotateCcw,
   Search,
   User,
   X,
 } from 'lucide-react';
 import { useDashboard } from '@/lib/dashboard-context';
 import { useAuth } from '@/lib/auth-context';
+import { useAppDate } from '@/lib/date-context';
 import Link from 'next/link';
 
 interface DashboardHeaderProps {
@@ -39,6 +46,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { currentDate, setCurrentDate, resetToToday, isCustomDate } = useAppDate();
   const {
     selectedFloor,
     selectedWard,
@@ -188,6 +196,36 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
             </div>
           )}
         </div>
+
+        {/* Date Picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={isCustomDate ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs gap-1.5 hidden sm:flex"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              {currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={(date) => date && setCurrentDate(date)}
+              defaultMonth={currentDate}
+            />
+            {isCustomDate && (
+              <div className="px-3 pb-3">
+                <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetToToday}>
+                  <RotateCcw className="w-3 h-3 mr-1.5" />
+                  Reset to Today
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
 
         {/* Actions */}
         <div className="flex items-center gap-1">
