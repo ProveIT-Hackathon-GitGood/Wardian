@@ -6,6 +6,9 @@ class PatientRepository:
     def get_patient(self, db: Session, patient_id: int):
         return db.query(Patient).filter(Patient.id == patient_id).first()
 
+    def get_patients(self, db: Session):
+        return db.query(Patient).all()
+
     def create_patient(self, db: Session, patient_data: PatientCreateSchema):
         db_patient = Patient(**patient_data.model_dump())
         db.add(db_patient)
