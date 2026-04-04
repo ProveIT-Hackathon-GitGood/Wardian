@@ -104,7 +104,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [beds, setBeds] = useState<Bed[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
 
+  const [backendReady, setBackendReady] = useState(false);
+
+  // Poll alerts every 10 seconds (+ initial fetch) once backend is confirmed reachable
   useEffect(() => {
+    if (!backendReady) return;
+
     async function loadAlerts() {
       try {
         const backendAlerts = await apiGet<BackendAlert[]>("/api/v1/alert", true) || [];
@@ -127,10 +132,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
 
     loadAlerts();
-  }, []);
+    const interval = setInterval(loadAlerts, 10000);
+    return () => clearInterval(interval);
+  }, [backendReady]);
 
-  const [backendReady, setBackendReady] = useState(false);
-
+  // WebSocket for instant alert updates (supplements polling)
   useEffect(() => {
     if (!backendReady) return;
 
@@ -193,11 +199,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadData() {
       try {
+        const safeFetch = async <T,>(url: string): Promise<T[]> => {
+          try {
+            return await apiGet<T[]>(url, true);
+          } catch (e: unknown) {
+            const err = e as { status?: number; message?: string };
+            console.warn(`Failed to fetch ${url}:`, err?.status, err?.message);
+            return [];
+          }
+        };
+
         const [backendBeds, backendPatients, backendWards, backendDepartments] = await Promise.all([
-          apiGet<BackendBed[]>('/api/v1/bed/', true),
-          apiGet<BackendPatient[]>('/api/v1/patient/', true),
-          apiGet<WardResponse[]>('/api/v1/ward/', true),
-          apiGet<DepartmentResponse[]>('/api/v1/department/', true),
+          safeFetch<BackendBed>('/api/v1/bed/'),
+          safeFetch<BackendPatient>('/api/v1/patient/'),
+          safeFetch<WardResponse>('/api/v1/ward/'),
+          safeFetch<DepartmentResponse>('/api/v1/department/'),
         ]);
 
         // Build floors from departments + wards

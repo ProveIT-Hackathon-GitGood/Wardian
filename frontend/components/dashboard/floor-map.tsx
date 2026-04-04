@@ -427,7 +427,6 @@ export function FloorMap() {
           statusFilter={statusFilter}
           wardName={currentWard?.name || 'Ward'}
           onDeleteBed={(bedId) => setShowDeleteBedConfirm(bedId)}
-          onAddPatient={(bedId) => setShowAddPatientDialog(bedId)}
           onAssignPatient={(bedId) => setShowAssignPatientDialog(bedId)}
           onUnassignPatient={(bedId) => handleUnassignPatientFromBed(bedId)}
           onRemovePatient={(patientId) => setShowRemovePatientConfirm(patientId)}
@@ -448,7 +447,6 @@ export function FloorMap() {
               }
               onClick={() => bed.patient && setSelectedPatient(bed.patient)}
               onDelete={() => setShowDeleteBedConfirm(bed.id)}
-              onAddPatient={() => setShowAddPatientDialog(bed.id)}
               onAssignPatient={() => setShowAssignPatientDialog(bed.id)}
               onUnassignPatient={() => handleUnassignPatientFromBed(bed.id)}
               onRemovePatient={() => bed.patient && setShowRemovePatientConfirm(bed.patient.id)}
@@ -788,7 +786,6 @@ function WardFloorPlan({
   statusFilter,
   wardName,
   onDeleteBed,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -802,7 +799,6 @@ function WardFloorPlan({
   statusFilter: StatusFilter;
   wardName: string;
   onDeleteBed: (bedId: string) => void;
-  onAddPatient: (bedId: string) => void;
   onAssignPatient: (bedId: string) => void;
   onUnassignPatient: (bedId: string) => void;
   onRemovePatient: (patientId: string) => void;
@@ -847,7 +843,6 @@ function WardFloorPlan({
               statusFilter={statusFilter}
               onClick={() => bed.patient && isFiltered(bed.bedNumber) && onSelectPatient(bed.patient)}
               onDelete={() => onDeleteBed(bed.id)}
-              onAddPatient={() => onAddPatient(bed.id)}
               onAssignPatient={() => onAssignPatient(bed.id)}
               onUnassignPatient={() => onUnassignPatient(bed.id)}
               onRemovePatient={() => bed.patient && onRemovePatient(bed.patient.id)}
@@ -873,7 +868,6 @@ function WardFloorPlan({
               statusFilter={statusFilter}
               onClick={() => bed.patient && isFiltered(bed.bedNumber) && onSelectPatient(bed.patient)}
               onDelete={() => onDeleteBed(bed.id)}
-              onAddPatient={() => onAddPatient(bed.id)}
               onAssignPatient={() => onAssignPatient(bed.id)}
               onUnassignPatient={() => onUnassignPatient(bed.id)}
               onRemovePatient={() => bed.patient && onRemovePatient(bed.patient.id)}
@@ -896,7 +890,6 @@ function FloorBed({
   statusFilter,
   onClick,
   onDelete,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -911,7 +904,6 @@ function FloorBed({
   statusFilter: StatusFilter;
   onClick: () => void;
   onDelete: () => void;
-  onAddPatient: () => void;
   onAssignPatient: () => void;
   onUnassignPatient: () => void;
   onRemovePatient: () => void;
@@ -981,16 +973,10 @@ function FloorBed({
         <DropdownMenuContent align="end" className="w-40">
           {isEmpty ? (
             <>
-              <DropdownMenuItem onClick={onAddPatient} className="text-xs">
+              <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
                 <UserPlus className="w-3 h-3 mr-2" />
-                Add Patient
+                Assign Patient
               </DropdownMenuItem>
-              {hasUnassignedPatients && (
-                <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
-                  <UserPlus className="w-3 h-3 mr-2" />
-                  Assign Patient
-                </DropdownMenuItem>
-              )}
             </>
           ) : (
             <>
@@ -1023,7 +1009,6 @@ function BedGridCard({
   isFiltered,
   onClick,
   onDelete,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -1036,7 +1021,6 @@ function BedGridCard({
   isFiltered: boolean;
   onClick: () => void;
   onDelete: () => void;
-  onAddPatient: () => void;
   onAssignPatient: () => void;
   onUnassignPatient: () => void;
   onRemovePatient: () => void;
@@ -1073,16 +1057,10 @@ function BedGridCard({
           <DropdownMenuContent align="end" className="w-40">
             {isEmpty ? (
               <>
-                <DropdownMenuItem onClick={onAddPatient} className="text-xs">
+                <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
                   <UserPlus className="w-3 h-3 mr-2" />
-                  Add Patient
+                  Assign Patient
                 </DropdownMenuItem>
-                {hasUnassignedPatients && (
-                  <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
-                    <UserPlus className="w-3 h-3 mr-2" />
-                    Assign Patient
-                  </DropdownMenuItem>
-                )}
               </>
             ) : (
               <>
