@@ -14,9 +14,11 @@ class Patient(Base):
     name = Column(String)
     age = Column(Integer)
     gender = Column(String)
-    cnp = Column(String)
+    cnp = Column(String, index=True)
     phone_number = Column(String)
+    emergency_contact_name = Column(String)
     emergency_contact = Column(String)
+    attending_physician = Column(String)
     blood_type = Column(String)
     allergies = Column(String)
     ai_insight = Column(String, nullable=True)
@@ -24,7 +26,7 @@ class Patient(Base):
     diagnosis = Column(String, nullable=True)
     performed_surgery = Column(String, nullable=True)
     clinical_notes = Column(String, nullable=True)
-    sepsis_risk_score = Column(Float)
+    sepsis_risk_score = Column(Float, nullable=True)
 
     is_active = Column(Boolean, default=True)
 
@@ -45,7 +47,5 @@ class PatientVital(Base):
     oxygen_saturation = Column(Float)
     respiratory_rate = Column(Float)
     recorded_at = Column(DateTime)
-
-
 
     patient = relationship("Patient", back_populates="vitals")

@@ -1,7 +1,13 @@
+from sqlalchemy.testing.pickleable import User
+
 from database import SessionLocal
+from models.bed import Bed
 from models.employee_code import EmployeeCode
 from models.hospital import Hospital
 from models.department import Department
+from models.ward import Ward
+from models.medical_staff import MedicalStaff
+
 
 def init_db_data():
     db = SessionLocal()
@@ -20,7 +26,6 @@ def init_db_data():
             db.add(department)
             db.commit()
             print("Added default Department: Emergency Department")
-        
 
         employee_code = db.query(EmployeeCode).first()
         if not employee_code:
@@ -28,7 +33,22 @@ def init_db_data():
             db.add(employee_code)
             db.commit()
             print("Added default Employee Code: 123456")
-            
+
+        ward = db.query(Ward).first()
+        if not ward:
+            ward = Ward(ward_number="Ward A", department_id=department.id)
+            db.add(ward)
+            db.commit()
+            print("Added default Ward: Ward A")
+
+        bed = db.query(Bed).first()
+        if not bed:
+            bed = Bed(ward_id=ward.ward_id, bed_number="Bed 1")
+            db.add(bed)
+            db.commit()
+            print("Added default Bed: Bed 1")
+
+
     except Exception as e:
         print(f"Error initializing default data: {e}")
         db.rollback()
