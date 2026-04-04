@@ -11,4 +11,4 @@ class Hospital(Base):
     name = Column(String, index=True)
 
     departments = relationship("Department", back_populates="hospital")
-    staff = relationship("MedicalStaff", back_populates="hospital")
+    medical_staff = relationship("MedicalStaff", back_populates="hospital")
