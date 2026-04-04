@@ -1,6 +1,10 @@
 from fastapi import FastAPI
+import models.user as user_model
+from database import engine
 
 app = FastAPI()
+
+user_model.Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
