@@ -30,3 +30,11 @@ uvicorn==0.43.0
 websocket==0.2.1
 zope.event==6.1
 zope.interface==8.2
+
+# --- ML Module dependencies ---
+xgboost>=2.0.0
+polars>=0.20.31
+shap>=0.46.0
+joblib>=1.4.0
+numpy>=1.26.0
+pandas>=2.2.0
