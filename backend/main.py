@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from starlette.middleware.cors import CORSMiddleware
 
 import models.bed as bed_model
@@ -7,6 +7,7 @@ import models.hospital as hospital_model
 import models.ward as ward_model
 import models.patient as patient_model
 import models.medical_staff as medical_staff_model
+from connection_manager.alert_manager import alert_manager
 
 from database import engine
 from exceptions.handlers import register_exception_handlers
@@ -57,3 +58,13 @@ async def root():
 @app.get("/hello/{name}")
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_feed(websocket: WebSocket):
+    await alert_manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        await alert_manager.disconnect(websocket)

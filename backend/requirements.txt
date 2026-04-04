@@ -9,6 +9,8 @@ click==8.3.2
 dnspython==2.8.0
 email-validator==2.3.0
 fastapi==0.135.3
+gevent==25.9.1
+greenlet==3.3.2
 h11==0.16.0
 idna==3.11
 passlib==1.7.4
@@ -25,3 +27,6 @@ starlette==1.0.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.43.0
+websocket==0.2.1
+zope.event==6.1
+zope.interface==8.2
