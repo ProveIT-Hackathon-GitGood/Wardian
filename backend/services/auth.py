@@ -2,11 +2,12 @@ from sqlalchemy.orm import Session
 
 from exceptions.exceptions import AppException
 from repositories.medical_staff import MedicalStaffRepository
+from routes.employer_code import EmployeeCodeRepository
 from schemas.auth import MedicalStaffLoginSchema, CreateMedicalStaffSchema
-from schemas.medical_staff import MedicalStaffCreateSchema
 from utils.jwt_handler import sign_jwt
 
 user_repository = MedicalStaffRepository()
+employee_code_repository = EmployeeCodeRepository()
 
 
 class AuthService:
@@ -20,6 +21,8 @@ class AuthService:
         return sign_jwt(existing_user.email, existing_user.id, existing_user.role)
 
     def register_account(self, user: CreateMedicalStaffSchema, db: Session):
+        if employee_code_repository.verify_employer_code(user.employee_code, db) is False:
+            raise AppException("Invalid employer code", 400)
         if user_repository.find_medical_staff_by_email(user.email, db):
             raise AppException("User already exists", 409)
         return user_repository.create_user(user, db)

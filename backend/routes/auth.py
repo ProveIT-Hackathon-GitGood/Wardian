@@ -20,7 +20,7 @@ def login_account(user: MedicalStaffLoginSchema, db: db_dependency):
     return response
 
 
-@auth_router.post("/register", response_model=MedicalStaffLoginOut, status_code=201)
+@auth_router.post("/register",  status_code=201)
 def register_account(user: CreateMedicalStaffSchema, db: db_dependency):
     response = auth_service.register_account(user, db)
     return response

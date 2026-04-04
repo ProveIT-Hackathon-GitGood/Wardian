@@ -15,6 +15,7 @@ class CreateMedicalStaffSchema(BaseModel):
                 "hospital_id": 1,
                 "department_id": 2,
                 "role": "doctor",
+                "employee_code": "EMP12345"
             }]
         }
     )
@@ -25,6 +26,7 @@ class CreateMedicalStaffSchema(BaseModel):
     hospital_id: int
     department_id: int
     role: StaffRole
+    employee_code: str
 
     @field_validator("password")
     @classmethod

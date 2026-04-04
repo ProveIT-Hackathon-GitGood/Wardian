@@ -15,8 +15,11 @@ class MedicalStaffRepository:
         return db.query(MedicalStaff).all()
 
     def create_user(self, user: CreateMedicalStaffSchema, db: Session) -> MedicalStaff:
+
         created_user = MedicalStaff(full_name=user.full_name,
                                     email=user.email,
+                                    hospital_id=user.hospital_id,
+                                    department_id=user.department_id,
                                     password=bcrypt_context.hash(user.password.get_secret_value()),
                                     role=user.role)
         saved_user = self.save_medical_staff(created_user, db)

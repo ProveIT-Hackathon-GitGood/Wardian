@@ -1,7 +1,9 @@
 from repositories.department import DepartmentRepository
+from schemas.department import DepartmentCreateSchema
 
 department_repository = DepartmentRepository()
 
 
 class DepartmentService:
-    pass
+    def add_department(self, request: DepartmentCreateSchema, db):
+        return department_repository.add_department(request, db)
