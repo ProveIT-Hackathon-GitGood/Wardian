@@ -82,6 +82,20 @@ export async function apiPatch<T>(path: string, body: unknown, auth = false): Pr
   return handleResponse<T>(res);
 }
 
+export async function apiPut<T>(path: string, body: unknown, auth = false): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (auth) {
+    const token = getAuthToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body),
+  });
+  return handleResponse<T>(res);
+}
+
 export async function apiDelete<T>(path: string, auth = false): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (auth) {

@@ -9,13 +9,13 @@ class CreateMedicalStaffSchema(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [{
-                "full_name": "fullname",
-                "email": "student123@yahoo.com",
-                "password": "Password1@",
+                "full_name": "doctorS",
+                "email": "s@yahoo.com",
+                "password": "Abc1234@",
                 "hospital_id": 1,
-                "department_id": 2,
+                "department_id": 1,
                 "role": "doctor",
-                "employee_code": "EMP12345"
+                "employee_code": "123456"
             }]
         }
     )

@@ -1,10 +1,13 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { MOCK_PATIENTS, MOCK_ALERTS, FLOORS, type Patient, type Alert, type Floor, type Ward } from './mock-data';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { FLOORS, type Patient, type Alert, type Floor, type Ward, MOCK_ALERTS } from './mock-data';
+import { getBeds } from './api/services/beds';
+import { getPatients } from './api/services/patients';
 
 interface Bed {
   id: string;
+  backendId?: number;
   bedNumber: string;
   wardId: string;
   patient?: Patient;
@@ -29,11 +32,13 @@ interface DashboardContextType {
   unreadAlertCount: number;
   addWard: (floorId: string, wardName: string) => void;
   deleteWard: (floorId: string, wardId: string) => void;
-  addBed: (wardId: string) => void;
+  addBed: (wardId: string, backendId?: number) => void;
   deleteBed: (bedId: string) => void;
   getCurrentWardBeds: () => Bed[];
   addPatient: (patient: Omit<Patient, 'id' | 'initials'>, bedId: string) => void;
   addUnassignedPatient: (patient: Omit<Patient, 'id' | 'initials'>) => void;
+  getBedBackendId: (bedId: string) => number | undefined;
+  getPatientBackendId: (patientId: string) => number | undefined;
   updatePatient: (patientId: string, updates: Partial<Patient>) => void;
   removePatient: (patientId: string) => void;
   assignPatientToBed: (patientId: string, bedId: string) => void;
@@ -43,18 +48,9 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-// Initialize beds from mock patients
-function initializeBeds(): Bed[] {
-  return MOCK_PATIENTS.map((patient) => ({
-    id: `bed-${patient.bedNumber}`,
-    bedNumber: patient.bedNumber,
-    wardId: 'ward-a',
-    patient,
-  }));
-}
-
 // Generate initials from name
 function generateInitials(name: string): string {
+  if (!name) return 'UN';
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
@@ -66,8 +62,74 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [highlightedBed, setHighlightedBed] = useState<string | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
   const [floors, setFloors] = useState<Floor[]>(FLOORS);
-  const [beds, setBeds] = useState<Bed[]>(initializeBeds);
+  const [beds, setBeds] = useState<Bed[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [patientsData, bedsData] = await Promise.all([
+          getPatients(),
+          getBeds()
+        ]);
+        
+        const mappedPatients: Patient[] = patientsData.map(p => ({
+          id: `patient-${p.id}`,
+          backendId: p.id,
+          name: p.name,
+          initials: generateInitials(p.name),
+          age: p.age,
+          gender: p.gender as 'M' | 'F',
+          bedNumber: '',
+          status: p.sepsis_risk_score && p.sepsis_risk_score > 50 ? 'critical' : (p.sepsis_risk_score && p.sepsis_risk_score > 20 ? 'warning' : 'stable'),
+          sepsisRiskScore: p.sepsis_risk_score || 0,
+          aiInsight: p.ai_insight || '',
+          admissionDate: p.admission_date,
+          diagnosis: p.diagnosis || '',
+          attendingPhysician: p.attending_physician,
+          vitals: {
+            heartRate: 70,
+            temperature: 36.5,
+            bloodPressure: '120/80',
+            oxygenSaturation: 98,
+            respiratoryRate: 15
+          },
+          medicalHistory: [],
+          performedSurgery: p.performed_surgery || undefined,
+          cnp: p.cnp,
+          phoneNumber: p.phone_number,
+          emergencyContactName: p.emergency_contact_name,
+          emergencyContactPhone: p.emergency_contact,
+          bloodType: p.blood_type,
+          allergies: p.allergies || undefined,
+        }));
+
+        const mappedBeds: Bed[] = bedsData.map(b => {
+          const bp = patientsData.find(pt => pt.bed_id === b.id);
+          const mappedP = bp ? mappedPatients.find(m => m.backendId === bp.id) : undefined;
+          if (mappedP) {
+            mappedP.bedNumber = b.bed_number;
+          }
+          return {
+            id: `bed-${b.id}`,
+            backendId: b.id,
+            bedNumber: b.bed_number,
+            // For now map all beds to 'ward-a' to be visible, or match ward names from FLOORS
+            wardId: 'ward-a',
+            patient: mappedP
+          };
+        });
+
+        const unassignedList = mappedPatients.filter(p => !patientsData.find(pd => pd.id === p.backendId)?.bed_id);
+        
+        setBeds(mappedBeds);
+        setUnassignedPatients(unassignedList);
+      } catch (err) {
+        console.error('Failed to load beds and patients:', err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const markAlertAsRead = useCallback((alertId: string) => {
     setAlerts((prev) =>
@@ -121,7 +183,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const addBed = useCallback((wardId: string) => {
+  const addBed = useCallback((wardId: string, backendId?: number) => {
     setBeds((prev) => {
       const wardBeds = prev.filter((b) => b.wardId === wardId);
       const maxBedNum = wardBeds.reduce((max, b) => {
@@ -131,6 +193,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const nextBedNumber = String(maxBedNum + 1).padStart(2, '0');
       const newBed: Bed = {
         id: `bed-${wardId}-${Date.now()}`,
+        backendId,
         bedNumber: nextBedNumber,
         wardId,
         patient: undefined,
@@ -237,6 +300,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return unassignedPatients;
   }, [unassignedPatients]);
 
+  const getBedBackendId = useCallback((bedId: string): number | undefined => {
+    return beds.find((b) => b.id === bedId)?.backendId;
+  }, [beds]);
+
+  const getPatientBackendId = useCallback((patientId: string): number | undefined => {
+    const bedPatient = beds.find((b) => b.patient?.id === patientId)?.patient;
+    if (bedPatient?.backendId) return bedPatient.backendId;
+    return unassignedPatients.find((p) => p.id === patientId)?.backendId;
+  }, [beds, unassignedPatients]);
+
   const patients = beds
     .filter((bed) => bed.patient)
     .map((bed) => bed.patient as Patient);
@@ -274,6 +347,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         assignPatientToBed,
         unassignPatientFromBed,
         getUnassignedPatients,
+        getBedBackendId,
+        getPatientBackendId,
       }}
     >
       {children}

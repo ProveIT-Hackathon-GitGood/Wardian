@@ -8,3 +8,4 @@ export * as medicalStaffApi from './services/medical-staff';
 export * as wardsApi from './services/wards';
 export * as bedsApi from './services/beds';
 export * as patientsApi from './services/patients';
+export * as alertsApi from './services/alerts';

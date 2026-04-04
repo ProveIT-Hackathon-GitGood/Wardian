@@ -1,4 +1,4 @@
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -15,12 +15,12 @@ department_service = DepartmentService()
 department_router = APIRouter(prefix="/api/v1/department", tags=["department"])
 
 
-@department_router.get("/", response_model=List[DepartmentResponseSchema], status_code=200)
-def get_departments(db: db_dependency):
-    return department_service.get_departments(db)
+@department_router.get("/")
+async def root():
+    return {"message": "Hello World"}
 
 
 @department_router.post("/", response_model=DepartmentResponseSchema, status_code=201)
-def add_department(request: DepartmentCreateSchema, db: db_dependency):
+def add_department(request: DepartmentCreateSchema, db: db_dependency, user_data=Depends(get_current_user)):
     response = department_service.add_department(request, db)
     return response
