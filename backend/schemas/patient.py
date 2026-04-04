@@ -52,26 +52,34 @@ class PatientResponseSchema(PatientBase):
 
 class PatientVitalBase(BaseModel):
     patient_id: int
-    timestamp: Optional[datetime] = None
-    heart_rate: float
-    lactate: float
-    ai_risk_score: Optional[float] = None
+    heart_rate: Optional[float] = None
+    lactate: Optional[float] = None
+    blood_pressure: Optional[float] = None
+    oxygen_saturation: Optional[float] = None
+    respiratory_rate: Optional[float] = None
+    recorded_at: Optional[datetime] = None
 
 
 class PatientVitalCreateSchema(PatientVitalBase):
-    pass
+    heart_rate: float
+    lactate: float
+    blood_pressure: float
+    oxygen_saturation: float
+    respiratory_rate: float
 
 
 class PatientVitalUpdateSchema(BaseModel):
-    patient_id: Optional[int] = None
-    timestamp: Optional[datetime] = None
     heart_rate: Optional[float] = None
     lactate: Optional[float] = None
-    ai_risk_score: Optional[float] = None
+    blood_pressure: Optional[float] = None
+    oxygen_saturation: Optional[float] = None
+    respiratory_rate: Optional[float] = None
+    recorded_at: Optional[datetime] = None
 
 
 class PatientVitalResponseSchema(PatientVitalBase):
     id: int
+    timestamp: Optional[datetime] = None
 
     class Config:
         from_attributes = True

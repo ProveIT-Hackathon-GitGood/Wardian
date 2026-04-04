@@ -21,6 +21,7 @@ from routes.patient import patient_router
 from routes.predict import predict_router
 from routes.ward import ward_router
 from routes.alert import alert_router
+from routes.patient_vital import patient_vital_router
 from routes.openai import router as openai_router
 from utils.init_data import init_db_data
 
@@ -51,6 +52,7 @@ app.include_router(auth_router)
 app.include_router(openai_router)
 app.include_router(predict_router)
 app.include_router(alert_router)
+app.include_router(patient_vital_router)
 
 bed_model.Base.metadata.create_all(bind=engine)
 department_model.Base.metadata.create_all(bind=engine)
