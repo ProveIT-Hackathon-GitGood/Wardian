@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { type Patient, type Alert, type Floor, type Ward } from './mock-data';
+import { type Patient, type Alert, type Floor, type Ward, type HistoryEvent } from './mock-data';
 import { apiGet, apiPost } from './api/client';
 import type { WardResponse, WardCreateRequest, DepartmentResponse } from './api/types';
 
@@ -58,6 +58,7 @@ interface BackendPatient {
   clinical_notes?: string;
   sepsis_risk_score?: number;
   is_active?: boolean;
+  medical_history?: any[];
 }
 
 interface Bed {
@@ -99,6 +100,7 @@ interface DashboardContextType {
   assignPatientToBed: (patientId: string, bedId: string) => void;
   unassignPatientFromBed: (bedId: string) => void;
   getUnassignedPatients: () => Patient[];
+  addHistoryEvent: (patientId: string, event: Omit<HistoryEvent, 'id'>) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -283,7 +285,23 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
             oxygenSaturation: 98,
             respiratoryRate: 16
           },
-          medicalHistory: [],
+          medicalHistory: (bp.medical_history || [])
+            .map(event => ({
+              id: `h-${event.id}`,
+              type: event.type as any,
+              title: event.title,
+              description: event.description,
+              date: event.date,
+              time: event.time,
+              details: event.details || undefined,
+              surgeryType: event.surgery_type || undefined,
+              attachments: event.attachments || undefined,
+            }))
+            .sort((a, b) => {
+              const timeA = new Date(`${a.date}T${a.time}`).getTime() || 0;
+              const timeB = new Date(`${b.date}T${b.time}`).getTime() || 0;
+              return timeB - timeA;
+            }),
           performedSurgery: bp.performed_surgery,
           clinicalObservations: bp.clinical_notes,
           cnp: bp.cnp,
@@ -540,15 +558,78 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return unassignedPatients;
   }, [unassignedPatients]);
 
-  const getBedBackendId = useCallback((bedId: string): number | undefined => {
-    return beds.find((b) => b.id === bedId)?.backendId;
-  }, [beds]);
-
   const getPatientBackendId = useCallback((patientId: string): number | undefined => {
     const bedPatient = beds.find((b) => b.patient?.id === patientId)?.patient;
     if (bedPatient?.backendId) return bedPatient.backendId;
     return unassignedPatients.find((p) => p.id === patientId)?.backendId;
   }, [beds, unassignedPatients]);
+
+  const addHistoryEvent = useCallback(async (patientId: string, event: Omit<HistoryEvent, 'id'>) => {
+    try {
+      const backendId = getPatientBackendId(patientId);
+      if (!backendId) throw new Error('Patient backend ID not found');
+
+      // Send to backend
+      const payload = {
+        type: event.type,
+        title: event.title,
+        description: event.description,
+        date: event.date,
+        time: event.time,
+        details: event.details,
+        surgery_type: event.surgeryType,
+      };
+      const created = await apiPost<any>(`/api/v1/patient/${backendId}/history`, payload, true);
+
+      // Update local state mimicking the new event
+      const newEvent: HistoryEvent = {
+        ...event,
+        id: `h-${created.id}`,
+      };
+
+      setBeds((prev) =>
+        prev.map((bed) => {
+          if (bed.patient?.id === patientId) {
+            return {
+              ...bed,
+              patient: {
+                ...bed.patient,
+                medicalHistory: [newEvent, ...bed.patient.medicalHistory]
+              }
+            };
+          }
+          return bed;
+        })
+      );
+      setUnassignedPatients((prev) =>
+        prev.map((p) => {
+          if (p.id === patientId) {
+            return {
+              ...p,
+              medicalHistory: [newEvent, ...p.medicalHistory]
+            };
+          }
+          return p;
+        })
+      );
+      setSelectedPatient((prev) => {
+        if (prev?.id === patientId) {
+          return {
+            ...prev,
+            medicalHistory: [newEvent, ...prev.medicalHistory]
+          };
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error('Failed to add medical history', error);
+      throw error;
+    }
+  }, [beds, unassignedPatients, getPatientBackendId]);
+
+  const getBedBackendId = useCallback((bedId: string): number | undefined => {
+    return beds.find((b) => b.id === bedId)?.backendId;
+  }, [beds]);
 
   const patients = beds
     .filter((bed) => bed.patient)
@@ -587,6 +668,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         assignPatientToBed,
         unassignPatientFromBed,
         getUnassignedPatients,
+        addHistoryEvent,
         getBedBackendId,
         getPatientBackendId,
       }}

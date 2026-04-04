@@ -108,3 +108,17 @@ export async function apiDelete<T>(path: string, auth = false): Promise<T> {
   });
   return handleResponse<T>(res);
 }
+
+export async function apiUpload<T>(path: string, formData: FormData, auth = false): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (auth) {
+    const token = getAuthToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+  return handleResponse<T>(res);
+}
