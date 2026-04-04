@@ -129,14 +129,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     loadAlerts();
   }, []);
 
+  const [backendReady, setBackendReady] = useState(false);
+
   useEffect(() => {
+    if (!backendReady) return;
+
     let ws: WebSocket | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout>;
     let isMounted = true;
 
     function connect() {
       const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/dashboard';
-      console.log('Attempting WebSocket connection to:', wsUrl);
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -170,15 +173,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         }
       };
 
-      ws.onerror = (err) => {
-        console.error('WebSocket error:', err);
-      };
+      ws.onerror = () => {};
 
-      ws.onclose = (event) => {
-        console.log('Disconnected from alert websocket. Code:', event.code, 'Reason:', event.reason);
+      ws.onclose = () => {
         if (isMounted) {
-          console.log('Reconnecting in 3 seconds...');
-          reconnectTimeout = setTimeout(connect, 3000);
+          reconnectTimeout = setTimeout(connect, 5000);
         }
       };
     }
@@ -190,7 +189,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       clearTimeout(reconnectTimeout);
       ws?.close();
     };
-  }, []);
+  }, [backendReady]);
   useEffect(() => {
     async function loadData() {
       try {
@@ -287,6 +286,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
         setBeds(newBeds);
         setUnassignedPatients(newUnassigned);
+        setBackendReady(true);
       } catch (err) {
         console.error('Failed to fetch data', err);
       }
