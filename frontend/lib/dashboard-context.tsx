@@ -12,6 +12,20 @@ interface BackendBed {
   is_occupied: boolean;
 }
 
+interface BackendAlertPatient {
+  id: number;
+  name: string;
+  age: number;
+  gender: string;
+  cnp?: string;
+  phone_number?: string;
+  blood_type?: string;
+  attending_physician?: string;
+  diagnosis?: string;
+  sepsis_risk_score?: number;
+  is_active?: boolean;
+}
+
 interface BackendAlert {
   id: number;
   patient_id: number;
@@ -21,6 +35,7 @@ interface BackendAlert {
   message: string | null;
   created_at: string;
   is_ready: boolean;
+  patient: BackendAlertPatient | null;
 }
 
 interface BackendPatient {
@@ -117,7 +132,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         const formattedAlerts: Alert[] = backendAlerts.map((alert) => ({
           id: alert.id.toString(),
           patientId: alert.patient_id.toString(),
-          patientName: `Patient ${alert.patient_id}`,
+          patientName: alert.patient?.name || `Patient ${alert.patient_id}`,
           bedNumber: alert.bed_id.toString(),
           ward: `Ward ${alert.ward_id}`,
           type: alert.type.toLowerCase() as 'critical' | 'warning' | 'info',
@@ -162,14 +177,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
               }
               const newAlert: Alert = {
                 id: data.id?.toString() || Math.random().toString(),
-                patientId: data.patientId?.toString() || data.patient_id?.toString() || '',
-                patientName: data.patientName || `Patient ${data.patient_id || data.patientId}`,
-                bedNumber: data.bedNumber?.toString() || data.bed_id?.toString() || '',
-                ward: data.ward || (data.ward_id ? `Ward ${data.ward_id}` : ''),
+                patientId: data.patient_id?.toString() || '',
+                patientName: data.patient?.name || `Patient ${data.patient_id}`,
+                bedNumber: data.bed_id?.toString() || '',
+                ward: data.ward_id ? `Ward ${data.ward_id}` : '',
                 type: data.type?.toLowerCase() || 'info',
                 message: data.message || '',
-                timestamp: data.timestamp || data.created_at || new Date().toISOString(),
-                isRead: data.isRead || data.is_ready || false,
+                timestamp: data.created_at || new Date().toISOString(),
+                isRead: data.is_ready || false,
               };
               return [newAlert, ...prev];
             });

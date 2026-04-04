@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from models.alert import Alert
 from schemas.alert import AlertCreateSchema
@@ -28,4 +28,4 @@ class AlertRepository:
         return True
 
     def get_all_alerts(self, db: Session):
-        return db.query(Alert).all()
+        return db.query(Alert).options(joinedload(Alert.patient)).all()

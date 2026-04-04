@@ -17,6 +17,21 @@ alert_router = APIRouter(prefix="/api/v1/alert", tags=["alert"])
 @alert_router.post("", status_code=201)
 async def create_alert(request: AlertCreateSchema, db: db_dependency):
     alert = alert_service.create_alert(request, db)
+    patient_data = None
+    if alert.patient:
+        patient_data = {
+            "id": alert.patient.id,
+            "name": alert.patient.name,
+            "age": alert.patient.age,
+            "gender": alert.patient.gender,
+            "cnp": alert.patient.cnp,
+            "phone_number": alert.patient.phone_number,
+            "blood_type": alert.patient.blood_type,
+            "attending_physician": alert.patient.attending_physician,
+            "diagnosis": alert.patient.diagnosis,
+            "sepsis_risk_score": alert.patient.sepsis_risk_score,
+            "is_active": alert.patient.is_active,
+        }
     await alert_manager.broadcast({
         "id": alert.id,
         "patient_id": alert.patient_id,
@@ -24,8 +39,9 @@ async def create_alert(request: AlertCreateSchema, db: db_dependency):
         "ward_id": alert.ward_id,
         "type": alert.type.value if alert.type else "INFO",
         "message": alert.message,
-        "created_at": alert.created_at.isoformat() if hasattr(alert, 'created_at') and alert.created_at else None,
-        "is_ready": getattr(alert, 'is_ready', False)
+        "created_at": alert.created_at.isoformat() if alert.created_at else None,
+        "is_ready": getattr(alert, 'is_ready', False),
+        "patient": patient_data,
     })
     return alert
 
