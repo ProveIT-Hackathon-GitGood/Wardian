@@ -1,26 +1,14 @@
 'use client';
 
-import {useState, useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {Textarea} from '@/components/ui/textarea';
 import {Label} from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {
     Activity,
@@ -30,6 +18,7 @@ import {
     ChevronDown,
     ChevronRight,
     Clock,
+    Download,
     FileText,
     Heart,
     Pencil,
@@ -40,18 +29,18 @@ import {
     TestTube,
     Thermometer,
     Trash2,
-    Download,
     Upload,
     User,
     Wind,
     X,
-    Zap, Bot,
+    Zap,
 } from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {cn} from '@/lib/utils';
-import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} from '@/lib/mock-data';
+import {BLOOD_TYPE_OPTIONS, type HistoryEvent, type Patient, SURGERY_OPTIONS} from '@/lib/mock-data';
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
+import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 interface PatientDossierProps {
     patient: Patient;
@@ -441,7 +430,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
 
     return (
         <Dialog open={true} onOpenChange={() => onClose()}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="px-5 py-3 border-b border-border">
                     <div className="flex items-center gap-3">
                         <div
@@ -480,9 +469,9 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 overflow-y-auto">
-                    <div className="p-4 pb-6">
-                        <Tabs defaultValue="overview" className="w-full">
+                <ScrollArea className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+                    <div className="p-4 pb-6 min-w-0 overflow-hidden">
+                        <Tabs defaultValue="overview" className="w-full min-w-0">
                             <TabsList className="mb-4">
                                 <TabsTrigger value="overview">Overview</TabsTrigger>
                                 <TabsTrigger value="input">Data Input</TabsTrigger>
@@ -1017,21 +1006,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                                 </Card>
                             </TabsContent>
                             <TabsContent value="assistant" className="space-y-3">
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Bot className="w-5 h-5"/>
-                                            Talk with the AI assistant
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground mb-4">
-                                            Ask questions about the patient's condition, get explanations of medical
-                                            terms, or seek recommendations for next steps based on the current data.
-                                        </p>
-                                    </CardContent>
-                                </Card>
-
+                                <AIChatPanel patient={patient}/>
                             </TabsContent>
                         </Tabs>
                     </div>
