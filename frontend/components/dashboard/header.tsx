@@ -61,6 +61,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
 
   const [localSearch, setLocalSearch] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const currentFloor = floors.find((f) => f.id === selectedFloor);
@@ -198,7 +199,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
         </div>
 
         {/* Date Picker */}
-        <Popover>
+        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
           <PopoverTrigger asChild>
             <Button
               variant={isCustomDate ? 'default' : 'outline'}
@@ -213,12 +214,25 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
             <Calendar
               mode="single"
               selected={currentDate}
-              onSelect={(date) => date && setCurrentDate(date)}
+              onSelect={(date) => {
+                if (date) {
+                  setCurrentDate(date);
+                  setIsDatePickerOpen(false);
+                }
+              }}
               defaultMonth={currentDate}
             />
             {isCustomDate && (
               <div className="px-3 pb-3">
-                <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetToToday}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-xs" 
+                  onClick={() => {
+                    resetToToday();
+                    setIsDatePickerOpen(false);
+                  }}
+                >
                   <RotateCcw className="w-3 h-3 mr-1.5" />
                   Reset to Today
                 </Button>
