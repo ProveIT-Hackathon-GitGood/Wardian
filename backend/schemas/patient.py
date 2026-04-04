@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
 
 from pydantic import BaseModel
 
@@ -45,6 +45,7 @@ class PatientUpdateSchema(BaseModel):
 
 class PatientResponseSchema(PatientBase):
     id: int
+    medical_history: List['PatientHistoryResponse'] = []
 
     class Config:
         from_attributes = True
@@ -71,6 +72,36 @@ class PatientVitalUpdateSchema(BaseModel):
 
 
 class PatientVitalResponseSchema(PatientVitalBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class PatientHistoryBase(BaseModel):
+    patient_id: int
+    type: str
+    title: str
+    description: str
+    date: str
+    time: str
+    details: Optional[str] = None
+    surgery_type: Optional[str] = None
+    attachments: Optional[List[Any]] = None
+
+
+class PatientHistoryCreateSchema(BaseModel):
+    type: str
+    title: str
+    description: str
+    date: str
+    time: str
+    details: Optional[str] = None
+    surgery_type: Optional[str] = None
+    attachments: Optional[List[Any]] = None
+
+
+class PatientHistoryResponse(PatientHistoryBase):
     id: int
 
     class Config:

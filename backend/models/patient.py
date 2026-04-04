@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Float, DateTime
+from sqlalchemy import Column, String, Integer, ForeignKey, Boolean, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -32,6 +32,7 @@ class Patient(Base):
 
     bed = relationship("Bed", back_populates="patients")
     vitals = relationship("PatientVital", back_populates="patient")
+    medical_history = relationship("PatientHistory", back_populates="patient")
 
 
 class PatientVital(Base):
@@ -49,3 +50,22 @@ class PatientVital(Base):
     recorded_at = Column(DateTime)
 
     patient = relationship("Patient", back_populates="vitals")
+
+
+class PatientHistory(Base):
+    __tablename__ = "patient_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"))
+    
+    type = Column(String)
+    title = Column(String)
+    description = Column(String)
+    date = Column(String)
+    time = Column(String)
+    
+    details = Column(String, nullable=True)
+    surgery_type = Column(String, nullable=True)
+    attachments = Column(JSON, nullable=True)
+    
+    patient = relationship("Patient", back_populates="medical_history")

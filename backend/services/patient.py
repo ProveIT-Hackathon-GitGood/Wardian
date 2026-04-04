@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from repositories.patient import PatientRepository
-from schemas.patient import PatientCreateSchema, PatientUpdateSchema
+from schemas.patient import PatientCreateSchema, PatientUpdateSchema, PatientHistoryCreateSchema
 
 patient_repository = PatientRepository()
 
@@ -18,6 +18,9 @@ class PatientService:
 
     def create_patient(self, db: Session, patient_data: PatientCreateSchema):
         return patient_repository.create_patient(db, patient_data)
+
+    def add_patient_history(self, db: Session, patient_id: int, history_data: PatientHistoryCreateSchema):
+        return patient_repository.add_patient_history(db, patient_id, history_data)
 
     def update_patient(self, db: Session, patient_id: int, patient_data: PatientUpdateSchema):
         patient = patient_repository.update_patient(db, patient_id, patient_data)

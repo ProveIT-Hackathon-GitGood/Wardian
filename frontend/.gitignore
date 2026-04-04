@@ -14,3 +14,7 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+
+# User Uploads
+public/uploads/*
+!public/uploads/.gitkeep
