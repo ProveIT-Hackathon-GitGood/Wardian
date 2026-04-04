@@ -12,12 +12,12 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       <DashboardHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       
-      <div className="flex">
+      <div className="flex flex-1 min-h-0">
         {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'mr-80' : ''}`}>
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'mr-80' : ''}`}>
           <FloorMap />
         </main>
         
