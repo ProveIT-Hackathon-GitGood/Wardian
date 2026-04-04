@@ -1,6 +1,7 @@
 'use client';
 
-import {useCallback, useState} from 'react';
+import {useState, useCallback} from 'react';
+import {toast} from 'sonner';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -37,9 +38,10 @@ import {
 } from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {cn} from '@/lib/utils';
-import {BLOOD_TYPE_OPTIONS, type HistoryEvent, type Patient, SURGERY_OPTIONS} from '@/lib/mock-data';
+import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} from '@/lib/mock-data';
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
+import {uploadPatientFile} from '@/lib/api/services/patients';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 interface PatientDossierProps {
@@ -48,7 +50,7 @@ interface PatientDossierProps {
 }
 
 export function PatientDossier({patient, onClose}: PatientDossierProps) {
-    const {updatePatient} = useDashboard();
+    const {updatePatient, addHistoryEvent} = useDashboard();
     const [selectedSurgery, setSelectedSurgery] = useState(patient.performedSurgery || '');
     const [clinicalObservations, setClinicalObservations] = useState(
         patient.clinicalObservations || ''
@@ -131,7 +133,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         },
     });
 
-    const handleSaveEntry = () => {
+    const handleSaveEntry = async () => {
         const hasSurgery = !!selectedSurgery;
         const hasObs = !!clinicalObservations.trim();
         const hasFiles = uploadedFiles.length > 0;
@@ -149,28 +151,42 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         const type = hasSurgery ? 'surgery' as const : hasFiles ? 'lab' as const : 'observation' as const;
         const title = hasSurgery ? selectedSurgery : hasFiles ? 'Lab Results & Observations' : 'Clinical Observation';
 
-        const fileAttachments = uploadedFiles.map(f => ({
-            name: f.name,
-            url: URL.createObjectURL(f),
-        }));
 
-        const entry: import('@/lib/mock-data').HistoryEvent = {
-            id: `h-${Date.now()}`,
-            type,
-            title,
-            description: parts.join(' — '),
-            date,
-            time,
-            surgeryType: hasSurgery ? selectedSurgery : undefined,
-            details: hasObs ? clinicalObservations.trim() : undefined,
-            attachments: hasFiles ? fileAttachments : undefined,
-        };
+        try {
+            const uploadedAttachments = [];
+            if (hasFiles) {
+                for (const file of uploadedFiles) {
+                    const result = await uploadPatientFile(file);
+                    uploadedAttachments.push({
+                        name: result.filename,
+                        url: result.url
+                    });
+                }
+            }
 
-        updatePatient(patient.id, {
-            medicalHistory: [...patient.medicalHistory, entry],
-            performedSurgery: selectedSurgery || patient.performedSurgery,
-            clinicalObservations: clinicalObservations || patient.clinicalObservations,
-        });
+            const entry: Omit<import('@/lib/mock-data').HistoryEvent, 'id'> = {
+                type,
+                title,
+                description: parts.join(' — '),
+                date,
+                time,
+                surgeryType: hasSurgery ? selectedSurgery : undefined,
+                details: hasObs ? clinicalObservations.trim() : undefined,
+                attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
+            };
+
+            await addHistoryEvent(patient.id, entry);
+            // After saving the event, update the patient model's high-level fields if needed locally
+            updatePatient(patient.id, {
+                performedSurgery: selectedSurgery || patient.performedSurgery,
+                clinicalObservations: clinicalObservations || patient.clinicalObservations,
+            });
+            toast.success('Medical history entry saved successfully');
+        } catch (error) {
+            console.error('Failed to add medical history', error);
+            toast.error('Failed to save medical history entry');
+            return;
+        }
         setSelectedSurgery('');
         setClinicalObservations('');
         setUploadedFiles([]);
@@ -185,17 +201,20 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         setAnalysisComplete(true);
 
         const now = new Date();
-        updatePatient(patient.id, {
-            medicalHistory: [...patient.medicalHistory, {
-                id: `h-${Date.now()}-ai`,
+        try {
+            await addHistoryEvent(patient.id, {
                 type: 'observation',
                 title: 'Wardian AI Analysis',
                 description: 'Automated sepsis risk analysis completed based on vitals, lab results, and clinical observations.',
                 date: now.toISOString().split('T')[0],
                 time: now.toTimeString().slice(0, 5),
                 analysisResult: 'Wardian has analyzed all available data. The sepsis risk score has been updated.',
-            }],
-        });
+            });
+            toast.success('Wardian Analysis completed successfully');
+        } catch (error) {
+            console.error('Failed to run AI analysis', error);
+            toast.error('Failed to complete Wardian Analysis');
+        }
     };
 
     const handleGeneratePatientReport = async () => {
@@ -430,7 +449,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
 
     return (
         <Dialog open={true} onOpenChange={() => onClose()}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
                 <DialogHeader className="px-5 py-3 border-b border-border">
                     <div className="flex items-center gap-3">
                         <div
@@ -469,9 +488,9 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
-                    <div className="p-4 pb-6 min-w-0 overflow-hidden">
-                        <Tabs defaultValue="overview" className="w-full min-w-0">
+                <ScrollArea className="flex-1 overflow-y-auto">
+                    <div className="p-4 pb-6">
+                        <Tabs defaultValue="overview" className="w-full">
                             <TabsList className="mb-4">
                                 <TabsTrigger value="overview">Overview</TabsTrigger>
                                 <TabsTrigger value="input">Data Input</TabsTrigger>

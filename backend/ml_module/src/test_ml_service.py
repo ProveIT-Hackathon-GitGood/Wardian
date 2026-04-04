@@ -26,21 +26,22 @@ import polars as pl
 # ---------------------------------------------------------------------------
 # Path setup
 # ---------------------------------------------------------------------------
-_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-_ML_MODULE   = os.path.join(_BACKEND_DIR, "..", "ml_module")
-_SRC         = os.path.join(_ML_MODULE, "src")
+_SRC_DIR     = os.path.dirname(os.path.abspath(__file__))          # .../ml_module/src
+_ML_MODULE   = os.path.dirname(_SRC_DIR)                           # .../ml_module
+_BACKEND_ROOT = os.path.dirname(_ML_MODULE)                         # .../backend
 
 # Add both the src ml module and the backend root to path
-for _p in [_SRC, _BACKEND_DIR, os.path.join(_BACKEND_DIR, "..")]:
+for _p in [_SRC_DIR, _BACKEND_ROOT]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from ml_service import MLService, SepsisObservation  # noqa: E402
+from ml_service import MLService
+from schemas.patient import PatientVitalResponseSchema  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # 1. Load real history from the dataset
 # ---------------------------------------------------------------------------
-DATA_FILE = os.path.join(_ML_MODULE, "../Dataset.csv")
+DATA_FILE = os.path.join(_ML_MODULE, "Dataset.csv")
 PATIENT_ID = "001895"
 
 print(f"Loading dataset from {DATA_FILE}...")
@@ -55,11 +56,12 @@ print(f"ONSET_HOUR: {ONSET_HOUR}")
 pre_df = patient_df.filter(pl.col("Hour") < ONSET_HOUR).tail(24)
 print(f"Pre-onset rows loaded: {pre_df.height}  (hours {pre_df['Hour'].min()} – {pre_df['Hour'].max()})")
 
-# Build history as a list of SepsisObservation
-history: list[SepsisObservation] = []
-for row in pre_df.to_dicts():
-    obs = SepsisObservation(
-        patient_id = str(row.get("Patient_ID", PATIENT_ID)),
+# Build history as a list of PatientVitalResponseSchema
+history: list[PatientVitalResponseSchema] = []
+for i, row in enumerate(pre_df.to_dicts()):
+    obs = PatientVitalResponseSchema(
+        id         = i + 1,
+        patient_id = 1, # Mock integer ID for the schema
         hour       = float(row["Hour"]),
         HR         = row.get("HR"),
         O2Sat      = row.get("O2Sat"),
@@ -95,8 +97,6 @@ for row in pre_df.to_dicts():
         WBC             = row.get("WBC"),
         Fibrinogen      = row.get("Fibrinogen"),
         Platelets       = row.get("Platelets"),
-        Age             = row.get("Age"),
-        Gender          = row.get("Gender"),
         Unit1           = row.get("Unit1"),
         Unit2           = row.get("Unit2"),
         HospAdmTime     = row.get("HospAdmTime"),
@@ -137,6 +137,8 @@ result  = service.predict(
     patient_id      = PATIENT_ID,
     history         = history,
     new_observation = UI_OBSERVATION,
+    age             = patient_df.head(1)["Age"].item(),
+    gender          = patient_df.head(1)["Gender"].item(),
 )
 
 # ---------------------------------------------------------------------------

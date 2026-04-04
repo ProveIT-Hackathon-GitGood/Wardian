@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-from dataclasses import dataclass, asdict, field
 from typing import Optional, List, Dict, Any
 
 import joblib
@@ -27,89 +26,23 @@ import polars as pl
 import xgboost as xgb
 
 # ---------------------------------------------------------------------------
-# Path wiring – locate the ml_module root relative to this file (src/)
+# Path wiring – locate the ml_module root and backend root
 # ---------------------------------------------------------------------------
 _SRC_DIR     = os.path.dirname(os.path.abspath(__file__))          # .../ml_module/src
 _ML_ROOT     = os.path.dirname(_SRC_DIR)                           # .../ml_module
+_BACKEND_ROOT = os.path.dirname(_ML_ROOT)                           # .../backend
 _ARTIFACTS   = os.path.join(_ML_ROOT, "artifacts")
-_SRC         = _SRC_DIR
 
-if _SRC not in sys.path:
-    sys.path.insert(0, _SRC)
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+if _BACKEND_ROOT not in sys.path:
+    sys.path.insert(0, _BACKEND_ROOT)
 
 from features import run_pipeline, VITALS, LABS  # noqa: E402
+from schemas.patient import PatientVitalResponseSchema, PatientVitalBase  # noqa: E402
 
 
-# ---------------------------------------------------------------------------
-# 1. Mock model: SepsisObservation
-#    Uses the *exact* column names from the PhysioNet dataset so that
-#    the feature pipeline receives what it expects.
-#    Replace with the real SQLAlchemy model when the schema migration lands.
-# ---------------------------------------------------------------------------
-
-@dataclass
-class SepsisObservation:
-    """
-    Represents one hourly row of clinical measurements for a patient.
-
-    Column names mirror the PhysioNet dataset exactly so that
-    `ml_module.src.features.run_pipeline` receives the correct schema
-    without any renaming adapter.
-
-    Future migration note:
-        The real `PatientVital` SQLAlchemy model will eventually contain
-        these fields. Until then this dataclass serves as the typed
-        contract between the service layer and the ML pipeline.
-    """
-    # Identifiers
-    patient_id: str        # textual patient identifier
-    hour: float            # ICU hour sequence (0-based, 1 row per hour)
-
-    # --- Vital signs (real-time, measured continuously) ---
-    HR:      Optional[float] = None   # Heart Rate (bpm)
-    O2Sat:   Optional[float] = None   # Oxygen Saturation (%)
-    Temp:    Optional[float] = None   # Temperature (°C)
-    SBP:     Optional[float] = None   # Systolic Blood Pressure (mmHg)
-    MAP:     Optional[float] = None   # Mean Arterial Pressure (mmHg)
-    DBP:     Optional[float] = None   # Diastolic Blood Pressure (mmHg)
-    Resp:    Optional[float] = None   # Respiration Rate (breaths/min)
-    EtCO2:   Optional[float] = None   # End-tidal CO2 (mmHg)
-
-    # --- Laboratory results (intermittent, up to 12h TTL carry-forward) ---
-    BaseExcess:       Optional[float] = None
-    HCO3:             Optional[float] = None
-    FiO2:             Optional[float] = None   # Fraction of Inspired O2 (>0.21 = supplemental O2)
-    pH:               Optional[float] = None
-    PaCO2:            Optional[float] = None
-    SaO2:             Optional[float] = None
-    AST:              Optional[float] = None
-    BUN:              Optional[float] = None
-    Alkalinephos:     Optional[float] = None
-    Calcium:          Optional[float] = None
-    Chloride:         Optional[float] = None
-    Creatinine:       Optional[float] = None
-    Bilirubin_direct: Optional[float] = None
-    Glucose:          Optional[float] = None
-    Lactate:          Optional[float] = None
-    Magnesium:        Optional[float] = None
-    Phosphate:        Optional[float] = None
-    Potassium:        Optional[float] = None
-    Bilirubin_total:  Optional[float] = None
-    TroponinI:        Optional[float] = None
-    Hct:              Optional[float] = None
-    Hgb:              Optional[float] = None
-    PTT:              Optional[float] = None
-    WBC:              Optional[float] = None
-    Fibrinogen:       Optional[float] = None
-    Platelets:        Optional[float] = None
-
-    # --- Patient context (static per admission) ---
-    Age:         Optional[float] = None
-    Gender:      Optional[float] = None   # 0 = Female, 1 = Male
-    Unit1:       Optional[float] = None   # MICU flag
-    Unit2:       Optional[float] = None   # SICU flag
-    HospAdmTime: Optional[float] = None
-    ICULOS:      Optional[float] = None   # ICU length of stay at this hour
+# SepsisObservation is now merged into PatientVital schema and model.
 
 
 # ---------------------------------------------------------------------------
@@ -157,21 +90,26 @@ class _MLAssets:
 # 3. Internal helpers
 # ---------------------------------------------------------------------------
 
-def _observations_to_polars(observations: List[SepsisObservation]) -> pl.DataFrame:
+def _observations_to_polars(observations: List[PatientVitalBase]) -> pl.DataFrame:
     """
-    Converts a list of SepsisObservation dataclasses into a Polars DataFrame,
+    Converts a list of PatientVitalBase/ResponseSchema objects into a Polars DataFrame,
     renaming 'patient_id' / 'hour' to the pipeline-expected 'Patient_ID' / 'Hour'.
+    Excludes non-clinical database fields like 'id' and 'timestamp'.
     """
     rows = []
     for obs in observations:
-        d = asdict(obs)
-        d["Patient_ID"] = d.pop("patient_id")
+        d = obs.model_dump()
+        d["Patient_ID"] = str(d.pop("patient_id"))
         d["Hour"] = d.pop("hour")
+        # Exclude metadata fields from the ML dataframe
+        d.pop("id", None)
+        d.pop("timestamp", None)
         rows.append(d)
 
-    df = pl.DataFrame(rows)
+    df = pl.DataFrame(rows).sort(["Patient_ID", "Hour"])
 
     # Cast all clinical columns to Float64 (they may be None → null)
+    # Note: Age and Gender are typically injected by the caller if missing
     clinical_cols = VITALS + LABS + ["Age", "Gender", "Unit1", "Unit2", "HospAdmTime", "ICULOS"]
     df = df.with_columns([
         pl.col(c).cast(pl.Float64, strict=False)
@@ -182,31 +120,34 @@ def _observations_to_polars(observations: List[SepsisObservation]) -> pl.DataFra
 
 
 def _carry_forward(
-    last_known: SepsisObservation,
+    last_known: PatientVitalResponseSchema,
     new_input: Dict[str, Any],
-) -> SepsisObservation:
+) -> PatientVitalBase:
     """
-    Builds a new SepsisObservation for the incoming UI update.
+    Builds a new PatientVital for the incoming UI update.
 
     Strategy:
         - Start from the last known observation (carry-forward semantics).
         - Override with any explicitly provided values from `new_input`.
         - Advance `hour` by 1 and update `ICULOS` accordingly.
     """
-    last_dict = asdict(last_known)
+    last_dict = last_known.model_dump()
 
     # Build the new row from carry-forward base
     new_row = {k: v for k, v in last_dict.items()}
-    new_row["hour"] = last_known.hour + 1.0
-    new_row["ICULOS"] = (last_known.ICULOS or last_known.hour) + 1.0
+    new_row["hour"] = (last_known.hour or 0.0) + 1.0
+    new_row["ICULOS"] = (last_known.ICULOS or last_known.hour or 0.0) + 1.0
 
     # Apply UI overrides (only recognised field names are accepted)
-    valid_fields = {f.name for f in SepsisObservation.__dataclass_fields__.values()}  # type: ignore[attr-defined]
+    valid_fields = set(PatientVitalBase.model_fields.keys())
     for key, value in new_input.items():
         if key in valid_fields and value is not None:
-            new_row[key] = float(value)
+            try:
+                new_row[key] = float(value)
+            except (ValueError, TypeError):
+                continue
 
-    return SepsisObservation(**new_row)
+    return PatientVitalBase(**new_row)
 
 
 def _build_prediction_payload(
@@ -240,8 +181,10 @@ class MLService:
     def predict(
         self,
         patient_id: str,
-        history: List[SepsisObservation],
+        history: List[PatientVitalResponseSchema],
         new_observation: Dict[str, Any],
+        age: Optional[float] = None,
+        gender: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
         Run a forward prediction given a patient's history + a new UI observation.
@@ -249,14 +192,16 @@ class MLService:
         Parameters
         ----------
         patient_id:
-            The patient's string identifier (used for labelling only; history
-            is assumed to already be filtered to this patient by the caller).
+            The patient's string identifier.
         history:
-            Ordered list of SepsisObservation objects representing the last
+            Ordered list of PatientVitalResponseSchema objects representing the last
             ≤24 hours of stored clinical data for this patient.
         new_observation:
-            Dict of field_name → value pairs from the UI update.  Any field
-            absent or None will be carried forward from the last history row.
+            Dict of field_name → value pairs from the UI update.
+        Age:
+            Patient's current age (injected into rows for ML compatibility).
+        Gender:
+            Patient's gender (1=Male, 0=Female).
 
         Returns
         -------
@@ -278,6 +223,13 @@ class MLService:
 
         # ── Step 1: Baseline probability on existing history ────────────────
         history_df = _observations_to_polars(history)
+        
+        # Inject static context if provided
+        if age is not None:
+             history_df = history_df.with_columns(pl.lit(age).alias("Age"))
+        if gender is not None:
+             history_df = history_df.with_columns(pl.lit(gender).alias("Gender"))
+
         history_processed = run_pipeline(history_df)
         X_base = _build_prediction_payload(history_processed, assets._feature_columns)
         previous_probability = float(assets._model.predict_proba(X_base)[0, 1])
@@ -287,6 +239,13 @@ class MLService:
 
         # ── Step 3: Append and rerun the full pipeline ───────────────────────
         new_obs_df = _observations_to_polars([new_obs])
+        
+        # Ensure Age/Gender consistency in the single-row dataframe too
+        if age is not None:
+             new_obs_df = new_obs_df.with_columns(pl.lit(age).alias("Age"))
+        if gender is not None:
+             new_obs_df = new_obs_df.with_columns(pl.lit(gender).alias("Gender"))
+
         combined_df = pl.concat([history_df, new_obs_df])
         combined_processed = run_pipeline(combined_df)
 
