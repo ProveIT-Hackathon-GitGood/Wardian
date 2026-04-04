@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from models.medical_staff import MedicalStaff
-from schemas.auth import CreateUserSchema
+from schemas.auth import CreateMedicalStaffSchema
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -14,7 +14,7 @@ class MedicalStaffRepository:
     def get_all_medical_staff(self, db: Session):
         return db.query(MedicalStaff).all()
 
-    def create_user(self, user: CreateUserSchema, db: Session) -> MedicalStaff:
+    def create_user(self, user: CreateMedicalStaffSchema, db: Session) -> MedicalStaff:
         created_user = MedicalStaff(full_name=user.full_name,
                                     email=user.email,
                                     password=bcrypt_context.hash(user.password.get_secret_value()),

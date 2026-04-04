@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr, SecretStr, Field, field_validator, Con
 from models.medical_staff import StaffRole
 
 
-class CreateUserSchema(BaseModel):
+class CreateMedicalStaffSchema(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [{
@@ -38,12 +38,12 @@ class CreateUserSchema(BaseModel):
         return v
 
 
-class UserLoginSchema(BaseModel):
+class MedicalStaffLoginSchema(BaseModel):
     email: EmailStr
     password: SecretStr
 
 
-class UserLoginOut(BaseModel):
+class MedicalStaffLoginOut(BaseModel):
     token: str
 
     class Config:

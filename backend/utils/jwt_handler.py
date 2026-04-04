@@ -3,6 +3,8 @@ import time
 import jwt
 from decouple import config
 
+from schemas.auth import MedicalStaffLoginOut
+
 JWT_SECRET = config("SECRET")
 JWT_ALGORITHM = config("ALGORITHM")
 
@@ -22,7 +24,7 @@ def sign_jwt(email: str, id: str, user_role: int):
     }
 
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return token_response(token)
+    return MedicalStaffLoginOut(token=token)
 
 
 def decode_jwt(token: str):
