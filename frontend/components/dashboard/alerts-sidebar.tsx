@@ -52,7 +52,7 @@ export function AlertsSidebar({ isOpen, onClose }: AlertsSidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed right-0 top-16 bottom-0 w-80 bg-card border-l border-border flex flex-col transition-transform duration-300 z-30',
+        'fixed right-0 top-12 bottom-0 w-80 bg-card border-l border-border flex flex-col transition-transform duration-300 z-30',
         isOpen ? 'translate-x-0' : 'translate-x-full'
       )}
     >

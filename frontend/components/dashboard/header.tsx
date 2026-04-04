@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
-  Activity,
   Bell,
   BarChart3,
   LogOut,
@@ -90,15 +89,10 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card">
-      <div className="flex h-11 items-center gap-3 px-3 lg:px-4">
+      <div className="flex h-12 items-center gap-3 px-3 lg:px-4">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
-            <Activity className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="text-sm font-semibold text-foreground hidden sm:inline">
-            Wardian
-          </span>
+        <Link href="/dashboard">
+          <img src="/wardian-logo.png" alt="Wardian" className="h-[1.7rem] w-auto" />
         </Link>
 
         <div className="h-4 w-px bg-border" />

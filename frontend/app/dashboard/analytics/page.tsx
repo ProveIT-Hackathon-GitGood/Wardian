@@ -58,10 +58,8 @@ export default function AnalyticsPage() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <Activity className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-foreground">Wardian Analytics</span>
+            <img src="/wardian-logo.png" alt="Wardian" className="h-[1.7rem] w-auto" />
+            <span className="text-lg font-bold text-foreground">Analytics</span>
           </div>
         </div>
       </header>
