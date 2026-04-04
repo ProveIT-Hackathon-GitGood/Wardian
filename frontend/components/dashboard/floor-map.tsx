@@ -43,6 +43,10 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BLOOD_TYPE_OPTIONS, type Patient } from '@/lib/mock-data';
+import { patientsApi, bedsApi } from '@/lib/api';
+import type { PatientCreateRequest } from '@/lib/api/types';
+import { toast } from 'sonner';
+import type { ApiError } from '@/lib/api';
 
 type StatusFilter = 'all' | 'stable' | 'warning' | 'critical';
 type ViewMode = 'grid' | 'floor';
@@ -67,6 +71,8 @@ export function FloorMap() {
     assignPatientToBed,
     unassignPatientFromBed,
     getUnassignedPatients,
+    getBedBackendId,
+    getPatientBackendId,
   } = useDashboard();
   
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -91,6 +97,7 @@ export function FloorMap() {
   const [newPatientBloodType, setNewPatientBloodType] = useState('');
   const [newPatientAllergies, setNewPatientAllergies] = useState('');
   const [newPatientAttending, setNewPatientAttending] = useState('');
+  const [isSubmittingPatient, setIsSubmittingPatient] = useState(false);
 
   const currentFloor = floors.find((f) => f.id === selectedFloor);
   const currentWard = currentFloor?.wards.find((w) => w.id === selectedWard);
@@ -116,9 +123,9 @@ export function FloorMap() {
       ? wardPatients
       : wardPatients.filter((p) => p.status === statusFilter);
 
-  const handleAddWard = () => {
+  const handleAddWard = async () => {
     if (newWardName.trim()) {
-      addWard(selectedFloor, newWardName.trim());
+      await addWard(selectedFloor, newWardName.trim());
       setNewWardName('');
       setShowAddWardDialog(false);
     }
@@ -130,6 +137,54 @@ export function FloorMap() {
     const remainingWards = currentFloor?.wards.filter((w) => w.id !== wardId);
     if (remainingWards && remainingWards.length > 0) {
       setSelectedWard(remainingWards[0].id);
+    }
+  };
+
+  const handleAddBed = async () => {
+    try {
+      const nextBedNum = wardBeds.length + 1;
+      const bedNumber = String(nextBedNum).padStart(2, '0');
+      const wardBackendId = parseInt(selectedWard.replace('ward-', ''), 10);
+      const res = await bedsApi.createBed({
+        ward_id: wardBackendId,
+        bed_number: bedNumber,
+      });
+      addBed(selectedWard, res.id);
+      toast.success(`Bed ${bedNumber} created`);
+    } catch (err: unknown) {
+      addBed(selectedWard);
+      const msg = (err as ApiError)?.message || 'Backend sync failed, bed added locally';
+      toast.warning(msg);
+    }
+  };
+
+  const handleAssignPatientToBed = async (patientId: string, bedId: string) => {
+    const patientBackendId = getPatientBackendId(patientId);
+    const bedBackendId = getBedBackendId(bedId);
+
+    assignPatientToBed(patientId, bedId);
+
+    if (patientBackendId && bedBackendId) {
+      try {
+        await patientsApi.updatePatient(patientBackendId, { bed_id: bedBackendId });
+      } catch {
+        toast.warning('Assigned locally but backend sync failed');
+      }
+    }
+  };
+
+  const handleUnassignPatientFromBed = async (bedId: string) => {
+    const bed = wardBeds.find(b => b.id === bedId);
+    const patientBackendId = bed?.patient ? getPatientBackendId(bed.patient.id) : undefined;
+
+    unassignPatientFromBed(bedId);
+
+    if (patientBackendId) {
+      try {
+        await patientsApi.updatePatient(patientBackendId, { bed_id: null });
+      } catch {
+        toast.warning('Unassigned locally but backend sync failed');
+      }
     }
   };
 
@@ -176,18 +231,48 @@ export function FloorMap() {
     allergies: newPatientAllergies.trim() || undefined,
   });
 
-  const handleAddPatient = (target: string) => {
+  const handleAddPatient = async (target: string) => {
     if (!newPatientName.trim() || !newPatientAge || !newPatientDiagnosis.trim()) return;
 
-    if (target === 'standalone') {
-      addUnassignedPatient(buildPatientData('--'));
-    } else {
-      const bed = wardBeds.find(b => b.id === target);
-      addPatient(buildPatientData(bed?.bedNumber || '01'), target);
-    }
+    setIsSubmittingPatient(true);
 
-    resetPatientForm();
-    setShowAddPatientDialog(null);
+    const bed = target !== 'standalone' ? wardBeds.find(b => b.id === target) : undefined;
+    const bedNumber = bed?.bedNumber || '--';
+
+    const apiPayload: PatientCreateRequest = {
+      name: newPatientName.trim(),
+      age: parseInt(newPatientAge, 10),
+      gender: newPatientGender,
+      cnp: newPatientCnp.trim() || '0000000000000',
+      phone_number: newPatientPhone.trim() || '-',
+      emergency_contact_name: newPatientEmergencyName.trim() || '-',
+      emergency_contact: newPatientEmergencyPhone.trim() || '-',
+      attending_physician: newPatientAttending.trim() || 'Unassigned',
+      blood_type: newPatientBloodType || 'O+',
+      allergies: newPatientAllergies.trim() || null,
+      admission_date: new Date().toISOString(),
+      diagnosis: newPatientDiagnosis.trim(),
+    };
+
+    try {
+      const created = await patientsApi.createPatient(apiPayload);
+      const localData = { ...buildPatientData(bedNumber), backendId: created.id };
+
+      if (target === 'standalone') {
+        addUnassignedPatient(localData);
+      } else {
+        addPatient(localData, target);
+      }
+
+      toast.success('Patient added successfully');
+      resetPatientForm();
+      setShowAddPatientDialog(null);
+    } catch (err: unknown) {
+      const msg = (err as { message?: string })?.message || 'Failed to add patient';
+      toast.error(msg);
+    } finally {
+      setIsSubmittingPatient(false);
+    }
   };
 
   return (
@@ -302,7 +387,7 @@ export function FloorMap() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => addBed(selectedWard)}
+            onClick={handleAddBed}
             className="h-7 text-xs gap-1.5"
           >
             <Plus className="w-3 h-3" />
@@ -342,9 +427,8 @@ export function FloorMap() {
           statusFilter={statusFilter}
           wardName={currentWard?.name || 'Ward'}
           onDeleteBed={(bedId) => setShowDeleteBedConfirm(bedId)}
-          onAddPatient={(bedId) => setShowAddPatientDialog(bedId)}
           onAssignPatient={(bedId) => setShowAssignPatientDialog(bedId)}
-          onUnassignPatient={(bedId) => unassignPatientFromBed(bedId)}
+          onUnassignPatient={(bedId) => handleUnassignPatientFromBed(bedId)}
           onRemovePatient={(patientId) => setShowRemovePatientConfirm(patientId)}
           hasUnassignedPatients={unassignedPatients.length > 0}
         />
@@ -363,9 +447,8 @@ export function FloorMap() {
               }
               onClick={() => bed.patient && setSelectedPatient(bed.patient)}
               onDelete={() => setShowDeleteBedConfirm(bed.id)}
-              onAddPatient={() => setShowAddPatientDialog(bed.id)}
               onAssignPatient={() => setShowAssignPatientDialog(bed.id)}
-              onUnassignPatient={() => unassignPatientFromBed(bed.id)}
+              onUnassignPatient={() => handleUnassignPatientFromBed(bed.id)}
               onRemovePatient={() => bed.patient && setShowRemovePatientConfirm(bed.patient.id)}
               hasUnassignedPatients={unassignedPatients.length > 0}
             />
@@ -571,9 +654,16 @@ export function FloorMap() {
             <Button
               size="sm"
               onClick={() => showAddPatientDialog && handleAddPatient(showAddPatientDialog)}
-              disabled={!newPatientName.trim() || !newPatientAge || !newPatientDiagnosis.trim()}
+              disabled={!newPatientName.trim() || !newPatientAge || !newPatientDiagnosis.trim() || isSubmittingPatient}
             >
-              {showAddPatientDialog === 'standalone' ? 'Add to Unassigned' : 'Add & Assign to Bed'}
+              {isSubmittingPatient ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-1.5" />
+                  Saving...
+                </>
+              ) : (
+                showAddPatientDialog === 'standalone' ? 'Add to Unassigned' : 'Add & Assign to Bed'
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -598,7 +688,7 @@ export function FloorMap() {
                     key={patient.id}
                     onClick={() => {
                       if (showAssignPatientDialog) {
-                        assignPatientToBed(patient.id, showAssignPatientDialog);
+                        handleAssignPatientToBed(patient.id, showAssignPatientDialog);
                         setShowAssignPatientDialog(null);
                       }
                     }}
@@ -696,7 +786,6 @@ function WardFloorPlan({
   statusFilter,
   wardName,
   onDeleteBed,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -710,7 +799,6 @@ function WardFloorPlan({
   statusFilter: StatusFilter;
   wardName: string;
   onDeleteBed: (bedId: string) => void;
-  onAddPatient: (bedId: string) => void;
   onAssignPatient: (bedId: string) => void;
   onUnassignPatient: (bedId: string) => void;
   onRemovePatient: (patientId: string) => void;
@@ -755,7 +843,6 @@ function WardFloorPlan({
               statusFilter={statusFilter}
               onClick={() => bed.patient && isFiltered(bed.bedNumber) && onSelectPatient(bed.patient)}
               onDelete={() => onDeleteBed(bed.id)}
-              onAddPatient={() => onAddPatient(bed.id)}
               onAssignPatient={() => onAssignPatient(bed.id)}
               onUnassignPatient={() => onUnassignPatient(bed.id)}
               onRemovePatient={() => bed.patient && onRemovePatient(bed.patient.id)}
@@ -781,7 +868,6 @@ function WardFloorPlan({
               statusFilter={statusFilter}
               onClick={() => bed.patient && isFiltered(bed.bedNumber) && onSelectPatient(bed.patient)}
               onDelete={() => onDeleteBed(bed.id)}
-              onAddPatient={() => onAddPatient(bed.id)}
               onAssignPatient={() => onAssignPatient(bed.id)}
               onUnassignPatient={() => onUnassignPatient(bed.id)}
               onRemovePatient={() => bed.patient && onRemovePatient(bed.patient.id)}
@@ -804,7 +890,6 @@ function FloorBed({
   statusFilter,
   onClick,
   onDelete,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -819,7 +904,6 @@ function FloorBed({
   statusFilter: StatusFilter;
   onClick: () => void;
   onDelete: () => void;
-  onAddPatient: () => void;
   onAssignPatient: () => void;
   onUnassignPatient: () => void;
   onRemovePatient: () => void;
@@ -889,16 +973,10 @@ function FloorBed({
         <DropdownMenuContent align="end" className="w-40">
           {isEmpty ? (
             <>
-              <DropdownMenuItem onClick={onAddPatient} className="text-xs">
+              <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
                 <UserPlus className="w-3 h-3 mr-2" />
-                Add Patient
+                Assign Patient
               </DropdownMenuItem>
-              {hasUnassignedPatients && (
-                <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
-                  <UserPlus className="w-3 h-3 mr-2" />
-                  Assign Patient
-                </DropdownMenuItem>
-              )}
             </>
           ) : (
             <>
@@ -931,7 +1009,6 @@ function BedGridCard({
   isFiltered,
   onClick,
   onDelete,
-  onAddPatient,
   onAssignPatient,
   onUnassignPatient,
   onRemovePatient,
@@ -944,7 +1021,6 @@ function BedGridCard({
   isFiltered: boolean;
   onClick: () => void;
   onDelete: () => void;
-  onAddPatient: () => void;
   onAssignPatient: () => void;
   onUnassignPatient: () => void;
   onRemovePatient: () => void;
@@ -981,16 +1057,10 @@ function BedGridCard({
           <DropdownMenuContent align="end" className="w-40">
             {isEmpty ? (
               <>
-                <DropdownMenuItem onClick={onAddPatient} className="text-xs">
+                <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
                   <UserPlus className="w-3 h-3 mr-2" />
-                  Add Patient
+                  Assign Patient
                 </DropdownMenuItem>
-                {hasUnassignedPatients && (
-                  <DropdownMenuItem onClick={onAssignPatient} className="text-xs">
-                    <UserPlus className="w-3 h-3 mr-2" />
-                    Assign Patient
-                  </DropdownMenuItem>
-                )}
               </>
             ) : (
               <>

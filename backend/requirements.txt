@@ -30,6 +30,7 @@ uvicorn==0.43.0
 websocket==0.2.1
 zope.event==6.1
 zope.interface==8.2
+openai
 
 # --- ML Module dependencies ---
 xgboost>=2.0.0

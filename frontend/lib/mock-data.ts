@@ -2,6 +2,7 @@ export type PatientStatus = 'stable' | 'warning' | 'critical';
 
 export interface Patient {
   id: string;
+  backendId?: number;
   name: string;
   initials: string;
   age: number;
@@ -60,6 +61,7 @@ export interface Ward {
   id: string;
   name: string;
   floor: string;
+  backendId?: number;
 }
 
 export interface Floor {

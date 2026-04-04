@@ -9,11 +9,23 @@ class PatientBase(BaseModel):
     name: str
     age: int
     gender: str
-    is_active: bool = True
+    cnp: str
+    phone_number: str
+    emergency_contact_name: str
+    emergency_contact: str
+    attending_physician: str
+    blood_type: str
+    allergies: Optional[str] = None
+    admission_date: datetime
 
 
 class PatientCreateSchema(PatientBase):
-    pass
+    ai_insight: Optional[str] = None
+    diagnosis: Optional[str] = None
+    performed_surgery: Optional[str] = None
+    clinical_notes: Optional[str] = None
+    sepsis_risk_score: Optional[float] = None
+    is_active: Optional[bool] = None
 
 
 class PatientUpdateSchema(BaseModel):
@@ -22,6 +34,13 @@ class PatientUpdateSchema(BaseModel):
     age: Optional[int] = None
     gender: Optional[str] = None
     is_active: Optional[bool] = None
+    cnp: Optional[str] = None
+    phone_number: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    attending_physician: Optional[str] = None
+    blood_type: Optional[str] = None
+    allergies: Optional[str] = None
 
 
 class PatientResponseSchema(PatientBase):
