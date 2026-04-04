@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,10 +10,30 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, ArrowLeft, ArrowRight, Shield, Stethoscope, Users } from 'lucide-react';
-import { HOSPITALS } from '@/lib/mock-data';
+import { useAuth, type RegisterData } from '@/lib/auth-context';
+import { hospitalsApi, departmentsApi, type ApiError } from '@/lib/api';
+import type { HospitalResponse, DepartmentResponse } from '@/lib/api/types';
+
+const FALLBACK_HOSPITALS: HospitalResponse[] = [
+  { id: 1, name: 'Central University Hospital' },
+  { id: 2, name: 'St. Mary Medical Center' },
+  { id: 3, name: 'Regional General Hospital' },
+  { id: 4, name: 'Metropolitan Health System' },
+  { id: 5, name: 'Community Memorial Hospital' },
+];
+
+const FALLBACK_DEPARTMENTS: DepartmentResponse[] = [
+  { id: 1, name: 'Cardiology', hospital_id: 1 },
+  { id: 2, name: 'Neurology', hospital_id: 1 },
+  { id: 3, name: 'Oncology', hospital_id: 1 },
+  { id: 4, name: 'General Surgery', hospital_id: 1 },
+  { id: 5, name: 'Emergency Medicine', hospital_id: 1 },
+  { id: 6, name: 'Internal Medicine', hospital_id: 1 },
+];
 
 export default function AuthPage() {
   const router = useRouter();
+  const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -21,23 +42,58 @@ export default function AuthPage() {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerHospital, setRegisterHospital] = useState('');
-  const [registerEmployeeId, setRegisterEmployeeId] = useState('');
+  const [registerDepartment, setRegisterDepartment] = useState('');
+  const [registerEmployeeCode, setRegisterEmployeeCode] = useState('');
   const [registerRole, setRegisterRole] = useState<string>('');
+  const [hospitals, setHospitals] = useState<HospitalResponse[]>(FALLBACK_HOSPITALS);
+  const [departments, setDepartments] = useState<DepartmentResponse[]>(FALLBACK_DEPARTMENTS);
+
+  useEffect(() => {
+    hospitalsApi.getHospitals()
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setHospitals(data); })
+      .catch(() => {});
+    departmentsApi.getDepartments()
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setDepartments(data); })
+      .catch(() => {});
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push('/dashboard');
+    try {
+      await login(loginEmail, loginPassword);
+      router.push('/dashboard');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      toast.error(apiErr.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push('/dashboard');
+    try {
+      const hospital = hospitals.find((h) => String(h.id) === registerHospital);
+      const data: RegisterData = {
+        name: registerName,
+        email: registerEmail,
+        password: registerPassword,
+        role: registerRole as 'doctor' | 'nurse',
+        hospitalId: hospital?.id ?? 1,
+        hospitalName: hospital?.name ?? '',
+        departmentId: Number(registerDepartment),
+        employeeCode: registerEmployeeCode,
+      };
+      await register(data);
+      router.push('/dashboard');
+    } catch (err) {
+      const apiErr = err as ApiError;
+      toast.error(apiErr.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const canProceedToStep2 = registerName.trim() && registerEmail.trim() && registerPassword.trim();
@@ -203,7 +259,7 @@ export default function AuthPage() {
                         <Input
                           id="reg-password"
                           type="password"
-                          placeholder="Create a strong password"
+                          placeholder="Min 8 chars, 1 uppercase, 1 number, 1 special"
                           value={registerPassword}
                           onChange={(e) => setRegisterPassword(e.target.value)}
                           required
@@ -234,27 +290,42 @@ export default function AuthPage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="hospital">Select Hospital</Label>
+                        <Label htmlFor="hospital">Hospital</Label>
                         <Select value={registerHospital} onValueChange={setRegisterHospital}>
                           <SelectTrigger id="hospital">
                             <SelectValue placeholder="Choose your hospital" />
                           </SelectTrigger>
                           <SelectContent>
-                            {HOSPITALS.map((hospital) => (
-                              <SelectItem key={hospital} value={hospital}>
-                                {hospital}
+                            {hospitals.map((hospital) => (
+                              <SelectItem key={hospital.id} value={String(hospital.id)}>
+                                {hospital.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="employeeId">Employee ID</Label>
+                        <Label htmlFor="department">Department</Label>
+                        <Select value={registerDepartment} onValueChange={setRegisterDepartment}>
+                          <SelectTrigger id="department">
+                            <SelectValue placeholder="Choose your department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept.id} value={String(dept.id)}>
+                                {dept.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="employeeCode">Employee Code</Label>
                         <Input
-                          id="employeeId"
-                          placeholder="DOC-2024-001"
-                          value={registerEmployeeId}
-                          onChange={(e) => setRegisterEmployeeId(e.target.value)}
+                          id="employeeCode"
+                          placeholder="EMP12345"
+                          value={registerEmployeeCode}
+                          onChange={(e) => setRegisterEmployeeCode(e.target.value)}
                           required
                         />
                       </div>

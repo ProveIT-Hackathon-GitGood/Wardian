@@ -29,6 +29,7 @@ import {
   X,
 } from 'lucide-react';
 import { useDashboard } from '@/lib/dashboard-context';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 interface DashboardHeaderProps {
@@ -37,6 +38,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const {
     selectedFloor,
     selectedWard,
@@ -224,8 +226,8 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel className="py-1.5">
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium">Dr. Elena Radu</span>
-                  <span className="text-[10px] font-normal text-muted-foreground">Cardiology</span>
+                  <span className="text-xs font-medium">{user?.name || 'User'}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground capitalize">{user?.role || ''}</span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -237,7 +239,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => router.push('/')}
+                onClick={() => { logout(); router.push('/'); }}
                 className="text-xs text-destructive focus:text-destructive cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5 mr-2" />

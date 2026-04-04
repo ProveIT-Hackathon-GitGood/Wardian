@@ -2,6 +2,9 @@ from models.department import Department
 
 
 class DepartmentRepository:
+    def get_departments(self, db):
+        return db.query(Department).all()
+
     def add_department(self, request, db):
         new_department = Department(
             hospital_id=request.hospital_id,

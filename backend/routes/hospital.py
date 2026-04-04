@@ -16,5 +16,5 @@ hospital_router = APIRouter(prefix="/api/v1/hospital", tags=["hospital"])
 
 
 @hospital_router.get("/", response_model=List[HospitalResponseSchema], status_code=200)
-def get_hospitals(db: db_dependency, user_data=Depends(get_current_user)):
+def get_hospitals(db: db_dependency):
     return hospital_service.get_hospitals(db)
