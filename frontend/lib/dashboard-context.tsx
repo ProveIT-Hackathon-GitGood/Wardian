@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { MOCK_ALERTS, type Patient, type Alert, type Floor, type Ward } from './mock-data';
+import { type Patient, type Alert, type Floor, type Ward } from './mock-data';
 import { apiGet, apiPost } from './api/client';
 import type { WardResponse, WardCreateRequest, DepartmentResponse } from './api/types';
 
@@ -10,6 +10,17 @@ interface BackendBed {
   ward_id: number;
   bed_number: string;
   is_occupied: boolean;
+}
+
+interface BackendAlert {
+  id: number;
+  patient_id: number;
+  bed_id: number;
+  ward_id: number;
+  type: string;
+  message: string | null;
+  created_at: string;
+  is_ready: boolean;
 }
 
 interface BackendPatient {
@@ -88,11 +99,98 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedBed, setHighlightedBed] = useState<string | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [floors, setFloors] = useState<Floor[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
 
+  useEffect(() => {
+    async function loadAlerts() {
+      try {
+        const backendAlerts = await apiGet<BackendAlert[]>("/api/v1/alert", true) || [];
+        if (!Array.isArray(backendAlerts)) return;
+        const formattedAlerts: Alert[] = backendAlerts.map((alert) => ({
+          id: alert.id.toString(),
+          patientId: alert.patient_id.toString(),
+          patientName: `Patient ${alert.patient_id}`,
+          bedNumber: alert.bed_id.toString(),
+          ward: `Ward ${alert.ward_id}`,
+          type: alert.type.toLowerCase() as 'critical' | 'warning' | 'info',
+          message: alert.message || '',
+          timestamp: alert.created_at || new Date().toISOString(),
+          isRead: alert.is_ready,
+        }));
+        setAlerts(formattedAlerts);
+      } catch (err) {
+        console.error('Error fetching alerts:', err);
+      }
+    }
+
+    loadAlerts();
+  }, []);
+
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout>;
+    let isMounted = true;
+
+    function connect() {
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/dashboard';
+      console.log('Attempting WebSocket connection to:', wsUrl);
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('Connected to alert websocket');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type && data.message) {
+            setAlerts(prev => {
+              if (prev.some(a => a.id === data.id?.toString())) {
+                return prev;
+              }
+              const newAlert: Alert = {
+                id: data.id?.toString() || Math.random().toString(),
+                patientId: data.patientId?.toString() || data.patient_id?.toString() || '',
+                patientName: data.patientName || `Patient ${data.patient_id || data.patientId}`,
+                bedNumber: data.bedNumber?.toString() || data.bed_id?.toString() || '',
+                ward: data.ward || (data.ward_id ? `Ward ${data.ward_id}` : ''),
+                type: data.type?.toLowerCase() || 'info',
+                message: data.message || '',
+                timestamp: data.timestamp || data.created_at || new Date().toISOString(),
+                isRead: data.isRead || data.is_ready || false,
+              };
+              return [newAlert, ...prev];
+            });
+          }
+        } catch (err) {
+          console.error('Error parsing websocket message', err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket error:', err);
+      };
+
+      ws.onclose = (event) => {
+        console.log('Disconnected from alert websocket. Code:', event.code, 'Reason:', event.reason);
+        if (isMounted) {
+          console.log('Reconnecting in 3 seconds...');
+          reconnectTimeout = setTimeout(connect, 3000);
+        }
+      };
+    }
+
+    connect();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(reconnectTimeout);
+      ws?.close();
+    };
+  }, []);
   useEffect(() => {
     async function loadData() {
       try {
@@ -149,7 +247,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           diagnosis: bp.diagnosis ?? '',
           attendingPhysician: bp.attending_physician,
           vitals: {
-            heartRate: 70, temperature: 37, bloodPressure: '120/80', oxygenSaturation: 98, respiratoryRate: 16
+            heartRate: 70,
+            temperature: 37,
+            bloodPressure: '120/80',
+            oxygenSaturation: 98,
+            respiratoryRate: 16
           },
           medicalHistory: [],
           performedSurgery: bp.performed_surgery,
@@ -189,6 +291,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         console.error('Failed to fetch data', err);
       }
     }
+
     loadData();
   }, []);
 
@@ -275,7 +378,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       }
       return prev.filter((bed) => bed.wardId !== wardId);
     });
-    
+
     setFloors((prev) =>
       prev.map((floor) => {
         if (floor.id === floorId) {
@@ -328,7 +431,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       id: `patient-${Date.now()}`,
       initials: generateInitials(patientData.name),
     };
-    
+
     setBeds((prev) =>
       prev.map((bed) =>
         bed.id === bedId ? { ...bed, patient: newPatient } : bed

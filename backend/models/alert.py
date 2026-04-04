@@ -8,7 +8,7 @@ from sqlalchemy import Column, Integer, ForeignKey, String
 from database import Base
 
 
-class AlertTypes(enum.Enum):
+class AlertTypes(str, enum.Enum):
     CRITICAL = "CRITICAL"
     WARNING = "WARNING"
     INFO = "INFO"

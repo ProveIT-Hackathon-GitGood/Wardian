@@ -18,7 +18,9 @@ from routes.department import department_router
 from routes.hospital import hospital_router
 from routes.medical_staff import medical_staff_router
 from routes.patient import patient_router
+from routes.predict import predict_router
 from routes.ward import ward_router
+from routes.alert import alert_router
 from routes.openai import router as openai_router
 from utils.init_data import init_db_data
 
@@ -27,6 +29,8 @@ app = FastAPI()
 origins = [
     "http://localhost:8081",
     "http://127.0.0.1:8081",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
@@ -45,6 +49,8 @@ app.include_router(patient_router)
 app.include_router(ward_router)
 app.include_router(auth_router)
 app.include_router(openai_router)
+app.include_router(predict_router)
+app.include_router(alert_router)
 
 bed_model.Base.metadata.create_all(bind=engine)
 department_model.Base.metadata.create_all(bind=engine)
@@ -71,7 +77,7 @@ async def say_hello(name: str):
 
 
 @app.websocket("/ws/{client_id}")
-async def websocket_feed(websocket: WebSocket):
+async def websocket_feed(websocket: WebSocket, client_id: str):
     await alert_manager.connect(websocket)
     try:
         while True:
