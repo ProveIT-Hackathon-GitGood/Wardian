@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+
 from models.ward import Ward
 from schemas.ward import WardCreateSchema, WardUpdateSchema
 

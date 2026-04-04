@@ -18,7 +18,6 @@ class WardService:
 
     def get_wards_by_department(self, db: Session, department_id: int):
         return ward_repository.get_wards_by_department(db, department_id)
-
     def create_ward(self, db: Session, ward_data: WardCreateSchema):
         return ward_repository.create_ward(db, ward_data)
 

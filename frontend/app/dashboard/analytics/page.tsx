@@ -32,29 +32,20 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { VITALS_HISTORY, WARD_RISK_DISTRIBUTION } from '@/lib/mock-data';
-import { useState, useEffect } from 'react';
-import { useDashboard } from '@/lib/dashboard-context';
+import { VITALS_HISTORY, WARD_RISK_DISTRIBUTION, MOCK_PATIENTS } from '@/lib/mock-data';
+import { useState } from 'react';
 
 export default function AnalyticsPage() {
-  const { patients } = useDashboard();
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (patients.length > 0 && !selectedPatient) {
-      setSelectedPatient(patients[0].id);
-    }
-  }, [patients, selectedPatient]);
-
-  const patient = patients.find((p) => p.id === selectedPatient);
+  const [selectedPatient, setSelectedPatient] = useState('p4');
+  const patient = MOCK_PATIENTS.find((p) => p.id === selectedPatient);
 
   // Calculate stats
-  const totalPatients = patients.length;
-  const criticalCount = patients.filter((p) => p.status === 'critical').length;
-  const warningCount = patients.filter((p) => p.status === 'warning').length;
-  const avgRiskScore = totalPatients > 0 ? Math.round(
-    patients.reduce((acc, p) => acc + p.sepsisRiskScore, 0) / totalPatients
-  ) : 0;
+  const totalPatients = MOCK_PATIENTS.length;
+  const criticalCount = MOCK_PATIENTS.filter((p) => p.status === 'critical').length;
+  const warningCount = MOCK_PATIENTS.filter((p) => p.status === 'warning').length;
+  const avgRiskScore = Math.round(
+    MOCK_PATIENTS.reduce((acc, p) => acc + p.sepsisRiskScore, 0) / totalPatients
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,16 +104,16 @@ export default function AnalyticsPage() {
                 <Heart className="w-5 h-5 text-critical" />
                 Patient Vitals Trend
               </CardTitle>
-                <Select value={selectedPatient || undefined} onValueChange={setSelectedPatient}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} {p.bedNumber ? `(Bed ${p.bedNumber})` : '(No Bed)'}
-                      </SelectItem>
-                    ))}
+              <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MOCK_PATIENTS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} (Bed {p.bedNumber})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </CardHeader>

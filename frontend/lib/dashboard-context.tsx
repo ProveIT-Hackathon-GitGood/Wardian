@@ -1,9 +1,37 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { FLOORS, type Patient, type Alert, type Floor, type Ward, MOCK_ALERTS } from './mock-data';
-import { getBeds } from './api/services/beds';
-import { getPatients } from './api/services/patients';
+import { MOCK_ALERTS, FLOORS, type Patient, type Alert, type Floor, type Ward } from './mock-data';
+import { apiGet } from './api/client';
+
+interface BackendBed {
+  id: number;
+  ward_id: number;
+  bed_number: string;
+  is_occupied: boolean;
+}
+
+interface BackendPatient {
+  id: number;
+  bed_id: number | null;
+  name: string;
+  age: number;
+  gender: string;
+  cnp: string;
+  phone_number: string;
+  emergency_contact_name: string;
+  emergency_contact: string;
+  attending_physician: string;
+  blood_type: string;
+  allergies?: string;
+  admission_date: string;
+  ai_insight?: string;
+  diagnosis?: string;
+  performed_surgery?: string;
+  clinical_notes?: string;
+  sepsis_risk_score?: number;
+  is_active?: boolean;
+}
 
 interface Bed {
   id: string;
@@ -48,9 +76,9 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
+
 // Generate initials from name
 function generateInitials(name: string): string {
-  if (!name) return 'UN';
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
@@ -66,69 +94,68 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function loadData() {
       try {
-        const [patientsData, bedsData] = await Promise.all([
-          getPatients(),
-          getBeds()
+        const [backendBeds, backendPatients] = await Promise.all([
+          apiGet<BackendBed[]>('/api/v1/bed', true),
+          apiGet<BackendPatient[]>('/api/v1/patient', true)
         ]);
-        
-        const mappedPatients: Patient[] = patientsData.map(p => ({
-          id: `patient-${p.id}`,
-          backendId: p.id,
-          name: p.name,
-          initials: generateInitials(p.name),
-          age: p.age,
-          gender: p.gender as 'M' | 'F',
+
+        const mappedPatients: Patient[] = backendPatients.map(bp => ({
+          id: `patient-${bp.id}`,
+          backendId: bp.id,
+          name: bp.name,
+          initials: generateInitials(bp.name),
+          age: bp.age,
+          gender: bp.gender as 'M' | 'F',
           bedNumber: '',
-          status: p.sepsis_risk_score && p.sepsis_risk_score > 50 ? 'critical' : (p.sepsis_risk_score && p.sepsis_risk_score > 20 ? 'warning' : 'stable'),
-          sepsisRiskScore: p.sepsis_risk_score || 0,
-          aiInsight: p.ai_insight || '',
-          admissionDate: p.admission_date,
-          diagnosis: p.diagnosis || '',
-          attendingPhysician: p.attending_physician,
+          status: 'stable',
+          sepsisRiskScore: bp.sepsis_risk_score ?? 0,
+          aiInsight: bp.ai_insight ?? '',
+          admissionDate: bp.admission_date,
+          diagnosis: bp.diagnosis ?? '',
+          attendingPhysician: bp.attending_physician,
           vitals: {
-            heartRate: 70,
-            temperature: 36.5,
-            bloodPressure: '120/80',
-            oxygenSaturation: 98,
-            respiratoryRate: 15
+            heartRate: 70, temperature: 37, bloodPressure: '120/80', oxygenSaturation: 98, respiratoryRate: 16
           },
           medicalHistory: [],
-          performedSurgery: p.performed_surgery || undefined,
-          cnp: p.cnp,
-          phoneNumber: p.phone_number,
-          emergencyContactName: p.emergency_contact_name,
-          emergencyContactPhone: p.emergency_contact,
-          bloodType: p.blood_type,
-          allergies: p.allergies || undefined,
+          performedSurgery: bp.performed_surgery,
+          clinicalObservations: bp.clinical_notes,
+          cnp: bp.cnp,
+          phoneNumber: bp.phone_number,
+          emergencyContactName: bp.emergency_contact_name,
+          emergencyContactPhone: bp.emergency_contact,
+          bloodType: bp.blood_type,
+          allergies: bp.allergies,
         }));
 
-        const mappedBeds: Bed[] = bedsData.map(b => {
-          const bp = patientsData.find(pt => pt.bed_id === b.id);
-          const mappedP = bp ? mappedPatients.find(m => m.backendId === bp.id) : undefined;
-          if (mappedP) {
-            mappedP.bedNumber = b.bed_number;
+        const newBeds: Bed[] = backendBeds.map(bb => {
+          const patientData = backendPatients.find(bp => bp.bed_id === bb.id);
+          const mappedPatient = patientData ? mappedPatients.find(p => p.backendId === patientData.id) : undefined;
+          if (mappedPatient) {
+            mappedPatient.bedNumber = bb.bed_number;
           }
           return {
-            id: `bed-${b.id}`,
-            backendId: b.id,
-            bedNumber: b.bed_number,
-            // For now map all beds to 'ward-a' to be visible, or match ward names from FLOORS
+            id: `bed-${bb.id}`,
+            backendId: bb.id,
+            bedNumber: bb.bed_number,
             wardId: 'ward-a',
-            patient: mappedP
+            patient: mappedPatient
           };
         });
 
-        const unassignedList = mappedPatients.filter(p => !patientsData.find(pd => pd.id === p.backendId)?.bed_id);
-        
-        setBeds(mappedBeds);
-        setUnassignedPatients(unassignedList);
+        const newUnassigned = mappedPatients.filter(p => {
+          const bp = backendPatients.find(x => x.id === p.backendId);
+          return bp && !bp.bed_id;
+        });
+
+        setBeds(newBeds);
+        setUnassignedPatients(newUnassigned);
       } catch (err) {
-        console.error('Failed to load beds and patients:', err);
+        console.error('Failed to fetch data', err);
       }
-    };
-    fetchData();
+    }
+    loadData();
   }, []);
 
   const markAlertAsRead = useCallback((alertId: string) => {

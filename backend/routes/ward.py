@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dependencies import get_current_user
-from schemas.ward import WardCreateSchema, WardUpdateSchema, WardResponseSchema
+from schemas.ward import WardResponseSchema, WardCreateSchema, WardUpdateSchema
 from services.ward import WardService
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -29,12 +29,9 @@ def get_ward(ward_id: int, db: db_dependency, user_data=Depends(get_current_user
 def create_ward(request: WardCreateSchema, db: db_dependency, user_data=Depends(get_current_user)):
     return ward_service.create_ward(db, request)
 
-
 @ward_router.put("/{ward_id}", response_model=WardResponseSchema)
-def update_ward(ward_id: int, request: WardUpdateSchema, db: db_dependency,
-                user_data=Depends(get_current_user)):
+def update_ward(ward_id: int, request: WardUpdateSchema, db: db_dependency, user_data=Depends(get_current_user)):
     return ward_service.update_ward(db, ward_id, request)
-
 
 @ward_router.delete("/{ward_id}", status_code=status.HTTP_200_OK)
 def delete_ward(ward_id: int, db: db_dependency, user_data=Depends(get_current_user)):
