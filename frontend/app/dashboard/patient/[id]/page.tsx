@@ -43,6 +43,7 @@ import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} fr
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
+import {apiPost} from '@/lib/api/client';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 const VITAL_SIGNS_OPTIONS = [
@@ -82,8 +83,6 @@ function PatientDossierView({ patient }: { patient: Patient }) {
     );
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [vitalSigns, setVitalSigns] = useState<{name: string, value: string}[]>([]);
-    const [isRunningAnalysis, setIsRunningAnalysis] = useState(false);
-    const [analysisComplete, setAnalysisComplete] = useState(false);
     const [entrySaved, setEntrySaved] = useState(false);
 
     const [patientReports, setPatientReports] = useState<{
@@ -219,6 +218,34 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                 clinicalObservations: clinicalObservations || patient.clinicalObservations,
             });
             toast.success('Medical history entry saved successfully');
+
+            // If vitals were entered, call the prediction endpoint
+            if (hasVitals && patient.backendId) {
+                try {
+                    const vitalsPayload: Record<string, number> = {};
+                    for (const v of validVitals) {
+                        vitalsPayload[v.name] = parseFloat(v.value);
+                    }
+                    const prediction = await apiPost<{
+                        current_probability: number;
+                        previous_probability: number;
+                        risk_delta: number;
+                        risk_trend: string;
+                        is_sepsis_alert: boolean;
+                        top_drivers: { feature: string; shap_impact: number; direction: string }[];
+                    }>(`/api/v1/predict/${patient.backendId}/risk-update`, { vitals: vitalsPayload }, true);
+
+                    const scorePercent = Math.round(prediction.current_probability * 100);
+                    updatePatient(patient.id, {
+                        sepsisRiskScore: scorePercent,
+                        aiInsight: `Risk ${prediction.risk_trend.toLowerCase()}. Top driver: ${prediction.top_drivers?.[0]?.feature ?? 'N/A'} (${prediction.top_drivers?.[0]?.direction ?? ''}).`,
+                    });
+                    toast.success(`Sepsis risk updated: ${scorePercent}%`);
+                } catch (predError) {
+                    console.error('Prediction failed (vitals still saved):', predError);
+                    toast.error('Vitals saved, but risk prediction failed.');
+                }
+            }
         } catch (error) {
             console.error('Failed to add medical history', error);
             toast.error('Failed to save medical history entry');
@@ -232,28 +259,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         setTimeout(() => setEntrySaved(false), 2000);
     };
 
-    const handleRunAnalysis = async () => {
-        setIsRunningAnalysis(true);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setIsRunningAnalysis(false);
-        setAnalysisComplete(true);
 
-        const now = new Date();
-        try {
-            await addHistoryEvent(patient.id, {
-                type: 'observation',
-                title: 'Wardian AI Analysis',
-                description: 'Automated sepsis risk analysis completed based on vitals, lab results, and clinical observations.',
-                date: now.toISOString().split('T')[0],
-                time: now.toTimeString().slice(0, 5),
-                analysisResult: 'Wardian has analyzed all available data. The sepsis risk score has been updated.',
-            });
-            toast.success('Wardian Analysis completed successfully');
-        } catch (error) {
-            console.error('Failed to run AI analysis', error);
-            toast.error('Failed to complete Wardian Analysis');
-        }
-    };
 
     const handleGeneratePatientReport = async () => {
         setIsGeneratingPatientReport(true);
@@ -1020,38 +1026,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                             <><Plus className="w-4 h-4"/> Save Entry to History</>
                                         )}
                                     </Button>
-                                    <Button
-                                        onClick={handleRunAnalysis}
-                                        disabled={isRunningAnalysis}
-                                        className={cn(
-                                            'flex-1 h-10 text-sm font-medium gap-2',
-                                            !isRunningAnalysis && !analysisComplete && 'animate-pulse-glow'
-                                        )}
-                                    >
-                                        {isRunningAnalysis ? (
-                                            <>
-                                                <span
-                                                    className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"/>
-                                                Analyzing...
-                                            </>
-                                        ) : (
-                                            <><Brain className="w-4 h-4"/> Run Wardian Analysis</>
-                                        )}
-                                    </Button>
                                 </div>
-
-                                {analysisComplete && (
-                                    <Card className="bg-primary/5 border-primary/30">
-                                        <CardContent className="p-3">
-                                            <div className="flex items-start gap-2">
-                                                <Brain className="w-4 h-4 text-primary mt-0.5 shrink-0"/>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Analysis complete. Results saved to Medical History.
-                                                </p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                )}
                             </TabsContent>
 
                             {/* Medical History Tab */}
