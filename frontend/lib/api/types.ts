@@ -129,6 +129,20 @@ export interface PatientResponse {
   clinical_notes: string | null;
   sepsis_risk_score: number | null;
   is_active: boolean;
+  medical_history: PatientHistoryResponse[];
+}
+
+export interface PatientHistoryResponse {
+  id: number;
+  patient_id: number;
+  type: 'surgery' | 'lab' | 'medication' | 'admission' | 'observation';
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  details?: string;
+  surgery_type?: string;
+  attachments?: any[];
 }
 
 export interface PatientCreateRequest {

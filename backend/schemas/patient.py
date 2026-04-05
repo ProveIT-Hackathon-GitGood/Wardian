@@ -17,15 +17,16 @@ class PatientBase(BaseModel):
     blood_type: str
     allergies: Optional[str] = None
     admission_date: datetime
-
-
-class PatientCreateSchema(PatientBase):
     ai_insight: Optional[str] = None
     diagnosis: Optional[str] = None
     performed_surgery: Optional[str] = None
     clinical_notes: Optional[str] = None
     sepsis_risk_score: Optional[float] = None
     is_active: Optional[bool] = None
+
+
+class PatientCreateSchema(PatientBase):
+    pass
 
 
 class PatientUpdateSchema(BaseModel):

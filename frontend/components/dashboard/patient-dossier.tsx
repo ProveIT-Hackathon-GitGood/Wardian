@@ -407,12 +407,48 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         const url = URL.createObjectURL(blob);
         const now = new Date();
 
-        setPatientReports(prev => [{
-            id: `pr-${Date.now()}`,
-            label: `Report — ${now.toLocaleDateString()}`,
-            timestamp: now.toLocaleString(),
-            url,
-        }, ...prev]);
+        // 1. Persist the report to the server
+        try {
+            const fileName = `wardian-report-${patient.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.pdf`;
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+            
+            const uploadResult = await uploadPatientFile(file);
+            
+            // 2. Add to Medical History
+            await addHistoryEvent(patient.id, {
+                type: 'observation',
+                title: 'Comprehensive Patient Report Generated',
+                description: `A full medical report was generated and saved to the repository.`,
+                date: now.toISOString().split('T')[0],
+                time: now.toTimeString().slice(0, 5),
+                attachments: [{
+                    name: fileName,
+                    url: uploadResult.url
+                }]
+            });
+            
+            toast.success('Report generated and saved to history');
+            
+            // 3. Update the local reports list
+            setPatientReports(prev => [{
+                id: `pr-${Date.now()}`,
+                label: `Report — ${now.toLocaleDateString()}`,
+                timestamp: now.toLocaleString(),
+                url: uploadResult.url, // Use the server URL
+            }, ...prev]);
+
+        } catch (error) {
+            console.error('Failed to save report to server', error);
+            toast.error('Report generated locally but failed to save to server');
+            
+            // Fallback: still show it locally
+            setPatientReports(prev => [{
+                id: `pr-${Date.now()}`,
+                label: `Report — ${now.toLocaleDateString()} (Local only)`,
+                timestamp: now.toLocaleString(),
+                url,
+            }, ...prev]);
+        }
 
         setIsGeneratingPatientReport(false);
     };
