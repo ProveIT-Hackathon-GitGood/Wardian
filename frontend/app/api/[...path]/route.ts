@@ -7,13 +7,15 @@ async function proxy(req: NextRequest) {
   const url = `${BACKEND_URL}${pathname}${search}`;
 
   const headers = new Headers();
-  headers.set('Content-Type', req.headers.get('Content-Type') ?? 'application/json');
+  const contentType = req.headers.get('Content-Type');
+  if (contentType) headers.set('Content-Type', contentType);
   const auth = req.headers.get('Authorization');
   if (auth) headers.set('Authorization', auth);
 
-  const body = req.method !== 'GET' && req.method !== 'HEAD'
-    ? await req.text()
-    : undefined;
+  let body: ArrayBuffer | undefined;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    body = await req.arrayBuffer();
+  }
 
   try {
     const res = await fetch(url, {
@@ -22,7 +24,7 @@ async function proxy(req: NextRequest) {
       body,
     });
 
-    const data = await res.text();
+    const data = await res.arrayBuffer();
     return new NextResponse(data, {
       status: res.status,
       headers: { 'Content-Type': res.headers.get('Content-Type') ?? 'application/json' },

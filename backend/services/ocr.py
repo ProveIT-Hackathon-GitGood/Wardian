@@ -9,7 +9,7 @@ client = AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 
 
 class OcrService:
-    async def extract_vitals_from_image(self, image: str):
+    async def extract_vitals_from_image(self, image: str, content_type: str = "image/jpeg"):
         prompt = """
             You are an expert medical data extractor. Look at this patient chart.
             Extract the latest values for: Heart Rate (HR), Mean Arterial Pressure (MAP), and Lactate.
@@ -26,7 +26,7 @@ class OcrService:
                         {"type": "text", "text": prompt},
                         {
                             "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{image}"}
+                            "image_url": {"url": f"data:{content_type};base64,{image}"}
                         }
                     ]
                 }
