@@ -278,6 +278,19 @@ def seed():
             print(f"\n  WARNING: ML scoring failed ({e}). Patients seeded without risk scores.")
             print("  You can re-run this script after fixing ML artifacts to update scores.")
 
+        # ── 4. Seed Employee Codes ──────────────────────────────────
+        print("\nSeeding employee codes ...")
+        DEMO_CODES = ["DOC-001", "DOC-002", "NUR-001", "NUR-002", "ADMIN-99"]
+        for code_str in DEMO_CODES:
+            existing_code = db.query(EmployeeCode).filter(EmployeeCode.code == code_str).first()
+            if not existing_code:
+                new_code = EmployeeCode(code=code_str)
+                db.add(new_code)
+                print(f"  Generated employee code: {code_str}")
+            else:
+                print(f"  Employee code already exists: {code_str}")
+        db.commit()
+
         print("\n[SUCCESS] Seeding complete!")
 
     except Exception as e:
