@@ -98,6 +98,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [vitalSigns, setVitalSigns] = useState<{name: string, value: string}[]>([]);
     const [entrySaved, setEntrySaved] = useState(false);
+    const [timelineFilter, setTimelineFilter] = useState('all');
     const [isScanning, setIsScanning] = useState(false);
     const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -706,7 +707,18 @@ function PatientDossierView({ patient }: { patient: Patient }) {
 
                 <ScrollArea className="flex-1 overflow-y-auto">
                     <div className="p-4 pb-6">
-                        <Tabs defaultValue="overview" className="w-full">
+                        <Tabs 
+                            defaultValue="overview" 
+                            className="w-full"
+                            onValueChange={() => {
+                                setVitalSigns([]);
+                                setClinicalObservations('');
+                                setUploadedFiles([]);
+                                setEntrySaved(false);
+                                setSelectedSurgery('');
+                                setIsScanning(false);
+                            }}
+                        >
                             <TabsList className="mb-4">
                                 <TabsTrigger value="overview">Overview</TabsTrigger>
                                 <TabsTrigger value="input">Data Input</TabsTrigger>
@@ -1200,13 +1212,44 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                             <p className="text-xs text-muted-foreground text-center py-6">No medical
                                                 history entries yet. Add data via the Data Input tab.</p>
                                         ) : (
-                                            <div className="relative">
-                                                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"/>
-                                                <div className="space-y-6">
-                                                    {patient.medicalHistory.map((event, index) => (
-                                                        <TimelineEvent key={event.id} event={event}
-                                                                       isLast={index === patient.medicalHistory.length - 1}/>
+                                            <div className="space-y-6">
+                                                {/* Category Filter */}
+                                                <div className="flex flex-wrap gap-1.5 pb-4 border-b border-border">
+                                                    {['all', 'observation', 'surgery', 'lab', 'medication', 'admission'].map((filter) => (
+                                                        <Button
+                                                            key={filter}
+                                                            variant={timelineFilter === filter ? 'default' : 'outline'}
+                                                            size="sm"
+                                                            className={cn(
+                                                                'h-6 px-2.5 text-[10px] capitalize rounded-full transition-all',
+                                                                timelineFilter === filter ? 'shadow-sm' : 'hover:bg-muted font-normal'
+                                                            )}
+                                                            onClick={() => setTimelineFilter(filter)}
+                                                        >
+                                                            {filter}
+                                                        </Button>
                                                     ))}
+                                                </div>
+
+                                                <div className="relative">
+                                                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"/>
+                                                    <div className="space-y-6">
+                                                        {patient.medicalHistory
+                                                            .filter(event => timelineFilter === 'all' || event.type === timelineFilter)
+                                                            .map((event, index, filteredArr) => (
+                                                                <TimelineEvent 
+                                                                    key={event.id} 
+                                                                    event={event}
+                                                                    isLast={index === filteredArr.length - 1}
+                                                                />
+                                                            ))
+                                                        }
+                                                        {patient.medicalHistory.filter(event => timelineFilter === 'all' || event.type === timelineFilter).length === 0 && (
+                                                            <p className="text-xs text-muted-foreground text-center py-8">
+                                                                No entries found for "{timelineFilter}"
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
