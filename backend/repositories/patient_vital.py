@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from models.patient import PatientVital
@@ -10,6 +12,19 @@ class PatientVitalRepository:
             db.query(PatientVital)
             .filter(PatientVital.patient_id == patient_id)
             .order_by(PatientVital.timestamp.desc())
+            .all()
+        )
+
+    def get_recent_vitals(self, db: Session, patient_id: int, hours: int = 24):
+        """Fetch vitals from the last `hours` hours, ordered ascending by hour for ML pipeline."""
+        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        return (
+            db.query(PatientVital)
+            .filter(
+                PatientVital.patient_id == patient_id,
+                PatientVital.timestamp >= cutoff,
+            )
+            .order_by(PatientVital.hour.asc())
             .all()
         )
 

@@ -1,7 +1,12 @@
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 
 from pydantic import BaseModel
+
+
+class RiskUpdateRequest(BaseModel):
+    """Payload from the frontend vital signs input: { "HR": 88.0, "Temp": 37.5, ... }"""
+    vitals: Dict[str, float]
 
 
 class PatientBase(BaseModel):
