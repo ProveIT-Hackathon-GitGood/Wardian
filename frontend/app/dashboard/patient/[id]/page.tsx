@@ -306,7 +306,9 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                     });
 
                     if (prediction.is_sepsis_alert) {
-                        toast.error(`⚠️ SEPSIS ALERT — Risk score: ${scorePercent}%`, { duration: 8000 });
+                        const topFeat = prediction.top_drivers?.[0]?.feature ?? 'N/A';
+                        const topDir = prediction.top_drivers?.[0]?.direction ?? '';
+                        toast.error(`⚠️ SEPSIS ALERT [${prediction.risk_trend}] — Risk: ${scorePercent}%. Top driver: ${topFeat} (${topDir}).`, { duration: 10000 });
                     } else {
                         toast.success(`Sepsis risk updated: ${scorePercent}%`);
                     }
