@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDashboard } from '@/lib/dashboard-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,6 @@ export function FloorMap() {
   const {
     patients,
     highlightedBed,
-    setSelectedPatient,
     floors,
     selectedFloor,
     selectedWard,
@@ -74,6 +74,8 @@ export function FloorMap() {
     getBedBackendId,
     getPatientBackendId,
   } = useDashboard();
+  
+  const router = useRouter();
   
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('floor');
@@ -423,7 +425,7 @@ export function FloorMap() {
           patients={filteredPatients}
           allPatients={wardPatients}
           highlightedBed={highlightedBed}
-          onSelectPatient={setSelectedPatient}
+          onSelectPatient={(p) => router.push(`/dashboard/patient/${p.id}`)}
           statusFilter={statusFilter}
           wardName={currentWard?.name || 'Ward'}
           onDeleteBed={(bedId) => setShowDeleteBedConfirm(bedId)}
@@ -445,7 +447,7 @@ export function FloorMap() {
                 statusFilter === 'all' ||
                 bed.patient?.status === statusFilter
               }
-              onClick={() => bed.patient && setSelectedPatient(bed.patient)}
+              onClick={() => bed.patient && router.push(`/dashboard/patient/${bed.patient.id}`)}
               onDelete={() => setShowDeleteBedConfirm(bed.id)}
               onAssignPatient={() => setShowAssignPatientDialog(bed.id)}
               onUnassignPatient={() => handleUnassignPatientFromBed(bed.id)}

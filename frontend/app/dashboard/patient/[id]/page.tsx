@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useCallback} from 'react';
+import {useState, useCallback, use} from 'react';
 import {toast} from 'sonner';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
@@ -9,9 +9,10 @@ import {ScrollArea} from '@/components/ui/scroll-area';
 import {Textarea} from '@/components/ui/textarea';
 import {Label} from '@/components/ui/label';
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '@/components/ui/dialog';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
-import {
+import { useRouter } from 'next/navigation';
+import { MainLayout } from '@/components/dashboard/main-layout';
+import { ArrowLeft,
     Activity,
     Brain,
     Calendar,
@@ -44,18 +45,43 @@ import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
-interface PatientDossierProps {
-    patient: Patient;
-    onClose: () => void;
+const VITAL_SIGNS_OPTIONS = [
+    'HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2',
+    'BaseExcess', 'HCO3', 'FiO2', 'pH', 'PaCO2', 'SaO2', 'AST', 'BUN',
+    'Alkalinephos', 'Calcium', 'Chloride', 'Creatinine', 'Bilirubin_direct',
+    'Glucose', 'Lactate', 'Magnesium', 'Phosphate', 'Potassium', 'Bilirubin_total',
+    'TroponinI', 'Hct', 'Hgb', 'PTT', 'WBC', 'Fibrinogen', 'Platelets',
+    'HospAdmTime', 'ICULOS'
+];
+
+export default function PatientPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
+    const { patients } = useDashboard();
+    const patientId = id.startsWith('patient-') ? id : 'patient-' + id;
+    const patient = patients.find(p => p.id === patientId || p.backendId?.toString() === id);
+
+    if (!patient) {
+        return (
+            <MainLayout>
+                <div className="flex flex-col items-center justify-center p-12 h-full text-muted-foreground">
+                    Patient not found based on ID: {id}
+                </div>
+            </MainLayout>
+        );
+    }
+
+    return <PatientDossierView patient={patient} />;
 }
 
-export function PatientDossier({patient, onClose}: PatientDossierProps) {
+function PatientDossierView({ patient }: { patient: Patient }) {
+    const router = useRouter();
     const {updatePatient, addHistoryEvent} = useDashboard();
     const [selectedSurgery, setSelectedSurgery] = useState(patient.performedSurgery || '');
     const [clinicalObservations, setClinicalObservations] = useState(
         patient.clinicalObservations || ''
     );
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [vitalSigns, setVitalSigns] = useState<{name: string, value: string}[]>([]);
     const [isRunningAnalysis, setIsRunningAnalysis] = useState(false);
     const [analysisComplete, setAnalysisComplete] = useState(false);
     const [entrySaved, setEntrySaved] = useState(false);
@@ -137,7 +163,10 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         const hasSurgery = !!selectedSurgery;
         const hasObs = !!clinicalObservations.trim();
         const hasFiles = uploadedFiles.length > 0;
-        if (!hasSurgery && !hasObs && !hasFiles) return;
+        const validVitals = vitalSigns.filter(v => v.name && v.value.trim());
+        const hasVitals = validVitals.length > 0;
+        
+        if (!hasSurgery && !hasObs && !hasFiles && !hasVitals) return;
 
         const now = new Date();
         const date = now.toISOString().split('T')[0];
@@ -145,12 +174,12 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
 
         const parts: string[] = [];
         if (hasSurgery) parts.push(`Surgery: ${selectedSurgery}`);
+        if (hasVitals) parts.push(`Vital Signs/Labs updated (${validVitals.length} values)`);
         if (hasObs) parts.push(clinicalObservations.trim().slice(0, 100) + (clinicalObservations.trim().length > 100 ? '...' : ''));
         if (hasFiles) parts.push(`${uploadedFiles.length} file(s) attached`);
 
-        const type = hasSurgery ? 'surgery' as const : hasFiles ? 'lab' as const : 'observation' as const;
-        const title = hasSurgery ? selectedSurgery : hasFiles ? 'Lab Results & Observations' : 'Clinical Observation';
-
+        const type = hasSurgery ? 'surgery' as const : hasFiles ? 'lab' as const : hasVitals ? 'observation' as const : 'observation' as const;
+        const title = hasSurgery ? selectedSurgery : hasFiles ? 'Lab Results' : hasVitals ? 'Vital Signs & Labs' : 'Clinical Observation';
 
         try {
             const uploadedAttachments = [];
@@ -164,6 +193,14 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                 }
             }
 
+            let combinedDetails = '';
+            if (hasVitals) {
+                combinedDetails += `Recorded Values:\n` + validVitals.map(v => `${v.name}: ${v.value}`).join('\n') + '\n\n';
+            }
+            if (hasObs) {
+                combinedDetails += `Notes:\n${clinicalObservations.trim()}`;
+            }
+
             const entry: Omit<import('@/lib/mock-data').HistoryEvent, 'id'> = {
                 type,
                 title,
@@ -171,7 +208,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                 date,
                 time,
                 surgeryType: hasSurgery ? selectedSurgery : undefined,
-                details: hasObs ? clinicalObservations.trim() : undefined,
+                details: combinedDetails.trim() || undefined,
                 attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
             };
 
@@ -190,6 +227,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
         setSelectedSurgery('');
         setClinicalObservations('');
         setUploadedFiles([]);
+        setVitalSigns([]);
         setEntrySaved(true);
         setTimeout(() => setEntrySaved(false), 2000);
     };
@@ -484,9 +522,12 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
     };
 
     return (
-        <Dialog open={true} onOpenChange={() => onClose()}>
-            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
-                <DialogHeader className="px-5 py-3 border-b border-border">
+        <MainLayout>
+            <div className="flex flex-col h-full bg-card">
+                <div className="px-5 py-3 border-b border-border flex items-center gap-4 sticky top-0 bg-background z-20">
+                    <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')}>
+                        <ArrowLeft className="w-5 h-5" />
+                    </Button>
                     <div className="flex items-center gap-3">
                         <div
                             className={cn(
@@ -500,13 +541,9 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                         >
                             {patient.initials}
                         </div>
-                        <div className="min-w-0">
-                            <DialogTitle className="text-base font-semibold leading-tight"
-                                         style={{fontFamily: 'var(--font-heading)'}}>{patient.name}</DialogTitle>
-                            <DialogDescription className="sr-only">
-                                Patient dossier for {patient.name} showing medical history, vitals, and sepsis risk
-                                assessment
-                            </DialogDescription>
+                        <div className="min-w-0 flex-1">
+                            <h2 className="text-xl font-semibold leading-tight"
+                                         style={{fontFamily: 'var(--font-heading)'}}>{patient.name}</h2>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="text-xs text-muted-foreground">
                   {patient.age} y/o {patient.gender === 'M' ? 'Male' : 'Female'}
@@ -522,7 +559,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                             </div>
                         </div>
                     </div>
-                </DialogHeader>
+                </div>
 
                 <ScrollArea className="flex-1 overflow-y-auto">
                     <div className="p-4 pb-6">
@@ -817,6 +854,81 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                                     </CardContent>
                                 </Card>
 
+                                {/* Vital Signs */}
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="flex items-center gap-2">
+                                                <Activity className="w-5 h-5"/>
+                                                Vital Signs
+                                            </CardTitle>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs gap-1"
+                                                onClick={() => setVitalSigns([...vitalSigns, {name: '', value: ''}])}
+                                            >
+                                                <Plus className="w-3 h-3"/> Add
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {vitalSigns.length === 0 ? (
+                                            <p className="text-xs text-muted-foreground">No vital signs added yet. Click Add to record new values.</p>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {vitalSigns.map((vital, index) => (
+                                                    <div key={index} className="flex flex-col sm:flex-row gap-2">
+                                                        <div className="flex-1">
+                                                            <Select
+                                                                value={vital.name}
+                                                                onValueChange={(val) => {
+                                                                    const newVitals = [...vitalSigns];
+                                                                    newVitals[index].name = val;
+                                                                    setVitalSigns(newVitals);
+                                                                }}
+                                                            >
+                                                                <SelectTrigger className="w-full text-xs h-9">
+                                                                    <SelectValue placeholder="Select vital sign..." />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {VITAL_SIGNS_OPTIONS.map((opt) => (
+                                                                        <SelectItem key={opt} value={opt} className="text-xs">{opt}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="flex-1 flex gap-2">
+                                                            <Input
+                                                                placeholder="Value"
+                                                                value={vital.value}
+                                                                onChange={(e) => {
+                                                                    const newVitals = [...vitalSigns];
+                                                                    newVitals[index].value = e.target.value;
+                                                                    setVitalSigns(newVitals);
+                                                                }}
+                                                                className="h-9 text-xs"
+                                                            />
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                                                                onClick={() => {
+                                                                    const newVitals = [...vitalSigns];
+                                                                    newVitals.splice(index, 1);
+                                                                    setVitalSigns(newVitals);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="w-4 h-4"/>
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
                                 {/* Clinical Observations */}
                                 <Card>
                                     <CardHeader>
@@ -899,7 +1011,7 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                                     <Button
                                         variant="outline"
                                         onClick={handleSaveEntry}
-                                        disabled={!selectedSurgery && !clinicalObservations.trim() && uploadedFiles.length === 0}
+                                        disabled={!selectedSurgery && !clinicalObservations.trim() && uploadedFiles.length === 0 && vitalSigns.filter(v => v.name && v.value.trim()).length === 0}
                                         className="flex-1 h-10 text-sm font-medium gap-2"
                                     >
                                         {entrySaved ? (
@@ -1066,8 +1178,8 @@ export function PatientDossier({patient, onClose}: PatientDossierProps) {
                         </Tabs>
                     </div>
                 </ScrollArea>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </MainLayout>
     );
 }
 
