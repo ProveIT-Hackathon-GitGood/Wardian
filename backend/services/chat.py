@@ -42,6 +42,27 @@ class ChatService:
         response = await self._call_openai(openai_messages)
         return {"role": "assistant", "content": response}
 
+    async def generate_simple_response(self, prompt: str) -> str:
+        messages = [
+            {"role": "system", "content": "You are a clinical AI assistant. Provide concise, accurate medical explanations."},
+            {"role": "user", "content": prompt}
+        ]
+        return await self._call_openai(messages)
+
+    async def generate_driver_explanation(self, risk_trend: str, drivers: list) -> str:
+        if not drivers:
+            return f"Sepsis risk is {risk_trend.lower()}. No specific drivers identified."
+            
+        drivers_text = ", ".join([f"{d['feature']} ({d['direction']})" for d in drivers])
+        prompt = f"""
+The patient's sepsis risk trend is {risk_trend.lower()}. 
+The top clinical drivers identified by the ML model are: {drivers_text}.
+
+Provide a very concise (1-2 sentences), professional clinical explanation of why these specific factors are contributing to the current sepsis risk level. 
+Directly address the clinician. Avoid introductory filler. Briefly explain the variables instead of using the variable names. Include the top 3 variables.
+"""
+        return await self.generate_simple_response(prompt)
+
     async def _call_openai(self, messages: list) -> str:
         if not client:
             raise HTTPException(status_code=500, detail="OpenAI API Key not configured in .env file")

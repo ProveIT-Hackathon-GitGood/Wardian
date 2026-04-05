@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useCallback, useRef, use} from 'react';
+import {useState, useCallback, useRef, use, useEffect} from 'react';
 import {toast} from 'sonner';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
@@ -12,7 +12,8 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/dashboard/main-layout';
-import { ArrowLeft,
+import { 
+    ArrowLeft,
     Activity,
     Brain,
     Calendar,
@@ -43,7 +44,7 @@ import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} fr
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
-import {apiPost, apiUpload} from '@/lib/api/client';
+import {apiGet, apiPost, apiUpload} from '@/lib/api/client';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 const VITAL_SIGNS_OPTIONS = [
@@ -73,6 +74,19 @@ export default function PatientPage({ params }: { params: Promise<{ id: string }
 
     return <PatientDossierView patient={patient} />;
 }
+
+const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
 
 function PatientDossierView({ patient }: { patient: Patient }) {
     const router = useRouter();
@@ -110,6 +124,58 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         attendingPhysician: patient.attendingPhysician,
         admissionDate: patient.admissionDate,
     });
+
+    // Fetch latest vitals from backend on mount
+    useEffect(() => {
+        if (!patient.backendId) return;
+
+        const fetchLatestVitals = async () => {
+            try {
+                // Fetch all vitals history (sorted desc by backend)
+                // This avoids 404 if no vitals exist and provides all data for densification
+                const history = await apiGet<any[]>(`/api/v1/patient-vital/patient/${patient.backendId}`, true);
+                
+                if (!history || history.length === 0) {
+                    // No vitals in DB - we keep the initial mocked ones or could clear them here
+                    return;
+                }
+
+                // 1. Start with the most recent record
+                let densified = { ...history[0] };
+                
+                // 2. Check if any core fields are missing and fill from history
+                const coreFields = ['HR', 'Temp', 'SBP', 'DBP', 'O2Sat', 'Resp'];
+                const isMissingAny = coreFields.some(f => densified[f] === null || densified[f] === undefined);
+
+                if (isMissingAny && history.length > 1) {
+                    for (const field of coreFields) {
+                        if (densified[field] === null || densified[field] === undefined) {
+                            const foundRecord = history.find(h => h[field] !== null && h[field] !== undefined);
+                            if (foundRecord) {
+                                densified[field] = foundRecord[field];
+                            }
+                        }
+                    }
+                }
+
+                // 3. Map the results to frontend structure
+                const mappedVitals = {
+                    heartRate: densified.HR ?? 0,
+                    temperature: densified.Temp ?? 0,
+                    bloodPressure: (densified.SBP !== null && densified.DBP !== null && densified.SBP !== undefined && densified.DBP !== undefined)
+                        ? `${Math.round(densified.SBP)}/${Math.round(densified.DBP)}`
+                        : densified.SBP != null ? `${Math.round(densified.SBP)}/-` : densified.DBP != null ? `-/${Math.round(densified.DBP)}` : 'N/A',
+                    oxygenSaturation: densified.O2Sat ?? 0,
+                    respiratoryRate: densified.Resp ?? 0
+                };
+                updatePatient(patient.id, { vitals: mappedVitals });
+            } catch (err) {
+                console.error('Failed to fetch or densify vitals:', err);
+            }
+        };
+
+        fetchLatestVitals();
+    }, [patient.backendId, patient.id, updatePatient]);
 
     const handleStartEdit = () => {
         setEditForm({
@@ -381,7 +447,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         const infoRows = [
             ['Age / Gender', `${patient.age} y/o ${patient.gender === 'M' ? 'Male' : 'Female'}`, 'Bed', patient.bedNumber],
             ['Diagnosis', patient.diagnosis, 'Attending', patient.attendingPhysician],
-            ['Admission Date', patient.admissionDate, 'Blood Type', patient.bloodType || 'N/A'],
+            ['Admission Date', formatDate(patient.admissionDate), 'Blood Type', patient.bloodType || 'N/A'],
             ['CNP', patient.cnp || 'N/A', 'Phone', patient.phoneNumber || 'N/A'],
             ['Emergency Contact', patient.emergencyContactName || 'N/A', 'Emergency Phone', patient.emergencyContactPhone || 'N/A'],
             ['Allergies', patient.allergies || 'None reported', '', ''],
@@ -407,7 +473,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         }
         y += 4;
 
-        // Current vitals
+        // Latest vitals
         checkPage(20);
         doc.setDrawColor(226, 232, 240);
         doc.line(m, y, pw - m, y);
@@ -415,7 +481,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(30, 58, 95);
-        doc.text('Current Vitals', m, y);
+        doc.text('Latest Vitals', m, y);
         y += 7;
 
         doc.setFontSize(9);
@@ -718,16 +784,14 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                     <Zap className="w-3 h-3 text-primary"/>
                                                     <span className="text-[11px] font-semibold text-foreground">AI Insight</span>
                                                 </div>
-                                                <div
-                                                    className={cn('px-3 py-2 rounded-md border', {
-                                                        'bg-critical/10 border-critical/30':
-                                                            patient.status === 'critical',
-                                                        'bg-warning/10 border-warning/30': patient.status === 'warning',
-                                                        'bg-success/10 border-success/30': patient.status === 'stable',
-                                                    })}
-                                                >
-                                                    <p className="text-xs text-foreground leading-relaxed">
-                                                        {patient.aiInsight}
+                                                <div className={cn(
+                                                    'px-4 py-3 rounded-md border min-h-[60px] flex items-center',
+                                                    patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical font-medium' :
+                                                    patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning font-medium' :
+                                                    'bg-success/10 border-success/30 text-success font-medium'
+                                                )}>
+                                                    <p className="text-xs leading-relaxed">
+                                                        {patient.aiInsight || "No clinical insight available yet."}
                                                     </p>
                                                 </div>
                                             </div>
@@ -735,13 +799,13 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                     </CardContent>
                                 </Card>
 
-                                {/* Current Vitals */}
+                                {/* Latest Vitals */}
                                 <Card>
                                     <CardHeader className="px-3 pt-2.5 pb-1">
                                         <CardTitle
                                             className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-muted-foreground">
                                             <Activity className="w-3 h-3"/>
-                                            Current Vitals
+                                            Latest Vitals
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="px-3 pb-2.5">
@@ -885,7 +949,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                             <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
                                                 <InfoRow label="Diagnosis" value={patient.diagnosis}/>
                                                 <InfoRow label="Attending" value={patient.attendingPhysician}/>
-                                                <InfoRow label="Admission" value={patient.admissionDate}/>
+                                                <InfoRow label="Admission" value={formatDate(patient.admissionDate)}/>
                                                 {patient.cnp ? <InfoRow label="CNP" value={patient.cnp}/> : <div/>}
                                                 {patient.bloodType ?
                                                     <InfoRow label="Blood Type" value={patient.bloodType}/> : <div/>}

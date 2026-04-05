@@ -125,7 +125,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
           </Select>
 
           <Select value={selectedWard} onValueChange={setSelectedWard}>
-            <SelectTrigger className="h-7 w-[100px] text-xs">
+            <SelectTrigger className="h-7 min-w-[80px] w-auto gap-2 text-xs">
               <SelectValue placeholder="Ward" />
             </SelectTrigger>
             <SelectContent>

@@ -16,6 +16,7 @@ from schemas.patient import (
     PatientUpdateSchema,
 )
 from ml_module.src.ml_service import MLService
+from services.chat import ChatService
 import traceback
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -23,6 +24,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 patient_repo = PatientRepository()
 vital_repo = PatientVitalRepository()
 ml_service = MLService()
+chat_service = ChatService()
 
 predict_router = APIRouter(prefix="/api/v1/predict", tags=["predict"])
 
@@ -106,9 +108,12 @@ async def risk_update(
     # ── 7. Persist risk score to patient record ─────────────────────────
     try:
         risk_score = round(result["current_probability"] * 100, 1)
-        top_feat = result["top_drivers"][0]["feature"] if result["top_drivers"] else "N/A"
-        top_dir  = result["top_drivers"][0]["direction"] if result["top_drivers"] else ""
-        ai_text  = f"Risk {result['risk_trend'].lower()}. Top driver: {top_feat} ({top_dir})."
+        
+        # Call AI for a detailed but concise driver explanation
+        ai_text = await chat_service.generate_driver_explanation(
+            risk_trend=result['risk_trend'],
+            drivers=result['top_drivers']
+        )
 
         update_payload = PatientUpdateSchema(
             sepsis_risk_score=risk_score,
