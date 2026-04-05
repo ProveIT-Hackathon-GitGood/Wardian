@@ -29,6 +29,7 @@ import {
   Search,
   User,
   X,
+  Menu,
 } from 'lucide-react';
 import { useDashboard } from '@/lib/dashboard-context';
 import { useAuth } from '@/lib/auth-context';
@@ -37,9 +38,10 @@ import Link from 'next/link';
 
 interface DashboardHeaderProps {
   onToggleSidebar: () => void;
+  onToggleMobileNav: () => void;
 }
 
-export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
+export function DashboardHeader({ onToggleSidebar, onToggleMobileNav }: DashboardHeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { currentDate, setCurrentDate, resetToToday, isCustomDate } = useAppDate();
@@ -105,23 +107,36 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card">
-      <div className="flex h-12 items-center gap-3 px-3 lg:px-4">
+      <div className="flex h-12 items-center gap-2 px-3 lg:px-4">
+        {/* Mobile Hamburger */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleMobileNav}
+          className="h-8 w-8 p-0 lg:hidden mr-1"
+        >
+          <Menu className="w-5 h-5 text-muted-foreground" />
+          <span className="sr-only">Open Menu</span>
+        </Button>
+
         {/* Logo */}
-        <Link href="/dashboard">
-          <img src="/wardian-logo.png" alt="Wardian" className="h-[1.7rem] w-auto" />
+        <Link href="/dashboard" className="shrink-0">
+          <img src="/wardian-logo.png" alt="Wardian" className="h-[1.5rem] lg:h-[1.7rem] w-auto" />
         </Link>
 
-        <div className="h-4 w-px bg-border" />
-
-        {/* Floor & Ward Selection */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-2 mr-2">
+        {/* Divider & Hospital - Hidden on Small Screens */}
+        <div className="hidden lg:flex items-center gap-3">
+          <div className="h-4 w-px bg-border mx-1" />
+          <div className="flex items-center gap-2">
             <span className="text-sm font-semibold truncate max-w-[150px]">{user?.hospital || 'Hospital'}</span>
             <span className="text-muted-foreground w-px h-4 bg-border" />
           </div>
+        </div>
 
+        {/* Floor & Ward Selection - Hidden on Mobile (moved to hamburger) */}
+        <div className="hidden lg:flex items-center gap-1.5 ml-1">
           <Select value={selectedFloor} onValueChange={setSelectedFloor}>
-            <SelectTrigger className="h-7 w-[180px] text-xs">
+            <SelectTrigger className="h-7 w-[160px] text-xs">
               <SelectValue placeholder="Floor" />
             </SelectTrigger>
             <SelectContent>

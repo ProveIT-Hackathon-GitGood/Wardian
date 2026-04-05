@@ -21,21 +21,19 @@ export const metadata: Metadata = {
   description: 'Enterprise-grade hospital ward management and sepsis risk monitoring system',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/wardian-logo.png',
+    apple: '/wardian-logo.png',
+  },
+  openGraph: {
+    title: 'Wardian | Hospital Ward Management',
+    description: 'Enterprise-grade hospital ward management and sepsis risk monitoring system',
+    images: [{ url: '/wardian-logo.png' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Wardian | Hospital Ward Management',
+    description: 'Enterprise-grade hospital ward management and sepsis risk monitoring system',
+    images: ['/wardian-logo.png'],
   },
 }
 

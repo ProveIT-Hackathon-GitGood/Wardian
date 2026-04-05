@@ -232,22 +232,32 @@ export function AlertsSidebar({ isOpen, onClose }: AlertsSidebarProps) {
   };
 
   return (
-    <aside
-      className={cn(
-        'fixed right-0 top-12 bottom-0 w-80 bg-card border-l border-border flex flex-col transition-transform duration-300 z-30',
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      )}
-    >
-      {/* Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bell className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Live Alerts</h2>
+    <>
+      {/* Backdrop for Mobile */}
+      <div
+        className={cn(
+          'fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden transition-all duration-300',
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={onClose}
+      />
+
+      <aside
+        className={cn(
+          'fixed right-0 top-0 lg:top-12 bottom-0 w-80 bg-card border-l border-border flex flex-col transition-transform duration-300 z-[45] lg:z-30',
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        )}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Live Alerts</h2>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="lg:hidden">
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
 
       {/* Alerts List */}
       <div className="flex-1 min-h-0 overflow-y-auto">
@@ -374,5 +384,6 @@ export function AlertsSidebar({ isOpen, onClose }: AlertsSidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   );
 }

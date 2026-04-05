@@ -346,7 +346,7 @@ export function FloorMap() {
       </div>
 
       {/* Stats Row - Compact */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
         <StatCard label="Beds" value={wardBeds.length} />
         <StatCard label="Occupied" value={wardPatients.length} />
         <StatCard label="Critical" value={statusCounts.critical} variant="critical" />
@@ -422,20 +422,22 @@ export function FloorMap() {
 
       {/* View Content */}
       {viewMode === 'floor' ? (
-        <WardFloorPlan
-          beds={wardBeds}
-          patients={filteredPatients}
-          allPatients={wardPatients}
-          highlightedBed={highlightedBed}
-          onSelectPatient={(p) => router.push(`/dashboard/patient/${p.id}`)}
-          statusFilter={statusFilter}
-          wardName={currentWard?.name || 'Ward'}
-          onDeleteBed={(bedId) => setShowDeleteBedConfirm(bedId)}
-          onAssignPatient={(bedId) => setShowAssignPatientDialog(bedId)}
-          onUnassignPatient={(bedId) => handleUnassignPatientFromBed(bedId)}
-          onRemovePatient={(patientId) => setShowRemovePatientConfirm(patientId)}
-          hasUnassignedPatients={unassignedPatients.length > 0}
-        />
+        <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
+          <WardFloorPlan
+            beds={wardBeds}
+            patients={filteredPatients}
+            allPatients={wardPatients}
+            highlightedBed={highlightedBed}
+            onSelectPatient={(p) => router.push(`/dashboard/patient/${p.id}`)}
+            statusFilter={statusFilter}
+            wardName={currentWard?.name || 'Ward'}
+            onDeleteBed={(bedId) => setShowDeleteBedConfirm(bedId)}
+            onAssignPatient={(bedId) => setShowAssignPatientDialog(bedId)}
+            onUnassignPatient={(bedId) => handleUnassignPatientFromBed(bedId)}
+            onRemovePatient={(patientId) => setShowRemovePatientConfirm(patientId)}
+            hasUnassignedPatients={unassignedPatients.length > 0}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
           {wardBeds.map((bed) => (

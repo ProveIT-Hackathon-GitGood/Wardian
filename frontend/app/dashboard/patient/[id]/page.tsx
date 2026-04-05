@@ -740,7 +740,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                             })}
                                         >
                                             <CardContent className="p-0 h-full flex items-center justify-center">
-                                                <div className="flex items-center justify-center gap-10 py-6 px-10">
+                                                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 py-8 px-6 sm:px-10">
                                                     <div className="flex flex-col items-center shrink-0 py-2">
                                                         <div className="relative w-40 h-40">
                                                             <svg className="w-full h-full transform -rotate-90"
@@ -788,7 +788,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center items-center sm:items-start text-center sm:text-left">
                                                         <div className="flex items-center gap-1.5 mb-0.5 ml-1 opacity-60">
                                                             <Brain className="w-2.5 h-2.5 text-primary"/>
                                                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Sepsis AI Panel</span>
@@ -798,7 +798,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                             <span className="text-[12px] font-black text-foreground uppercase tracking-tight">Clinical Insight</span>
                                                         </div>
                                                         <div className={cn(
-                                                            'p-5 rounded-xl border min-h-[100px] flex items-center justify-center shadow-sm text-center',
+                                                            'p-5 rounded-xl border min-h-[100px] flex items-center justify-center shadow-sm text-center w-full sm:w-auto',
                                                             patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical' :
                                                             patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning' :
                                                             'bg-success/10 border-success/30 text-success'
@@ -829,7 +829,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="px-3 pb-2.5">
-                                        <div className="grid grid-cols-4 gap-2">
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                             <VitalDisplay
                                                 icon={<Heart className="w-3 h-3"/>}
                                                 label="Heart Rate"
