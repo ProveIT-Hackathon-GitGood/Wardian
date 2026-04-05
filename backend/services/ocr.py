@@ -11,11 +11,22 @@ client = AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 class OcrService:
     async def extract_vitals_from_image(self, image: str, content_type: str = "image/jpeg"):
         prompt = """
-            You are an expert medical data extractor. Look at this patient chart.
-            Extract the latest values for: Heart Rate (HR), Mean Arterial Pressure (MAP), and Lactate.
-            Return ONLY a valid JSON object. Do not include markdown formatting like ```json.
-            Example output format: {"hr": 95, "map": 65, "lactate": 2.1}
-            """
+You are an expert medical data extractor. Analyze this patient monitor/chart image carefully.
+Extract ALL visible vital signs and lab values. Use EXACTLY these canonical keys when the corresponding measurement is present (do NOT invent values that are not visible):
+
+HR (Heart Rate), O2Sat (SpO2/Oxygen Saturation), Temp (Temperature),
+SBP (Systolic Blood Pressure), MAP (Mean Arterial Pressure), DBP (Diastolic Blood Pressure),
+Resp (Respiratory Rate), EtCO2, BaseExcess, HCO3, FiO2, pH, PaCO2, SaO2,
+AST, BUN, Alkalinephos, Calcium, Chloride, Creatinine, Bilirubin_direct,
+Glucose, Lactate, Magnesium, Phosphate, Potassium, Bilirubin_total,
+TroponinI, Hct, Hgb, PTT, WBC, Fibrinogen, Platelets
+
+Return ONLY a valid JSON object with the detected keys and their numeric values.
+Do NOT include markdown formatting like ```json.
+Only include keys for values that are clearly visible in the image.
+
+Example: {"HR": 95, "MAP": 65, "SBP": 120, "DBP": 80, "O2Sat": 98, "Resp": 16}
+"""
 
         response = await client.chat.completions.create(
             model="gpt-4o",
