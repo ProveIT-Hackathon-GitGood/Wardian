@@ -11,6 +11,9 @@ class PatientVitalService:
     def get_vitals_by_patient(self, db: Session, patient_id: int):
         return patient_vital_repository.get_vitals_by_patient(db, patient_id)
 
+    def get_vitals_history_by_vital_name(self, db: Session, patient_id: int, vital_name: str):
+        return patient_vital_repository.get_vitals_history_by_vital_name(db, patient_id, vital_name)
+
     def get_latest_vital(self, db: Session, patient_id: int):
         vital = patient_vital_repository.get_latest_vital(db, patient_id)
         if not vital:

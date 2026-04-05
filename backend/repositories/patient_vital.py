@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from models.patient import PatientVital
-from schemas.patient import PatientVitalCreateSchema, PatientVitalUpdateSchema
+from schemas.patient import PatientVitalCreateSchema, PatientVitalUpdateSchema, PatientVitalHistoryEntry, \
+    PatientVitalHistoryResponseSchema
 
 
 class PatientVitalRepository:
@@ -14,6 +15,37 @@ class PatientVitalRepository:
             .order_by(PatientVital.timestamp.desc())
             .all()
         )
+
+    def get_vitals_history_by_vital_name(self, db: Session, patient_id: int, vital_name: str):
+        try:
+            column_attr = getattr(PatientVital, vital_name)
+        except AttributeError:
+            return PatientVitalHistoryResponseSchema(name=vital_name, data=[])
+
+        records = (
+            db.query(
+                PatientVital.timestamp.label("timestamp"),
+                column_attr.label("value")
+            )
+            .filter(PatientVital.patient_id == patient_id)
+            .filter(column_attr.isnot(None))
+            .order_by(PatientVital.timestamp.asc())
+            .all()
+        )
+
+        history_entries = [
+            PatientVitalHistoryEntry(
+                value=float(record.value),
+                timestamp=record.timestamp
+            )
+            for record in records
+        ]
+
+        return PatientVitalHistoryResponseSchema(
+            name=vital_name,
+            data=history_entries
+        )
+
 
     def get_recent_vitals(self, db: Session, patient_id: int, hours: int = 24):
         """Fetch vitals from the last `hours` hours, ordered ascending by hour for ML pipeline."""

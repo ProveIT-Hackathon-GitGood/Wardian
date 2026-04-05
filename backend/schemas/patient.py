@@ -133,6 +133,19 @@ class PatientVitalResponseSchema(PatientVitalBase):
         from_attributes = True
 
 
+class PatientVitalHistoryEntry(BaseModel):
+    value: float
+    timestamp: datetime
+
+
+class PatientVitalHistoryResponseSchema(BaseModel):
+    name: str
+    data: List[PatientVitalHistoryEntry]
+
+    class Config:
+        from_attributes = True
+
+
 class PatientHistoryBase(BaseModel):
     patient_id: int
     type: str

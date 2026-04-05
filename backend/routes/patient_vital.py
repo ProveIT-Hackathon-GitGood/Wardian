@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from dependencies import get_current_user
-from schemas.patient import PatientVitalCreateSchema, PatientVitalUpdateSchema, PatientVitalResponseSchema
+from schemas.patient import PatientVitalCreateSchema, PatientVitalUpdateSchema, PatientVitalResponseSchema, \
+    PatientVitalHistoryResponseSchema
 from services.patient_vital import PatientVitalService
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -18,6 +19,13 @@ patient_vital_router = APIRouter(prefix="/api/v1/patient-vital", tags=["patient-
 @patient_vital_router.get("/patient/{patient_id}", response_model=List[PatientVitalResponseSchema])
 def get_vitals_by_patient(patient_id: int, db: db_dependency, user_data=Depends(get_current_user)):
     return patient_vital_service.get_vitals_by_patient(db, patient_id)
+
+
+@patient_vital_router.get("/vital-name/{vital-name}/{vital_id}", response_model=PatientVitalHistoryResponseSchema)
+def get_vitals_history_by_vital_name(patient_id: int, vital_name: str, db: db_dependency,
+                                     user_data=Depends(get_current_user)):
+    vitals_list = patient_vital_service.get_vitals_history_by_vital_name(db, patient_id, vital_name)
+    return vitals_list
 
 
 @patient_vital_router.get("/patient/{patient_id}/latest", response_model=PatientVitalResponseSchema)
