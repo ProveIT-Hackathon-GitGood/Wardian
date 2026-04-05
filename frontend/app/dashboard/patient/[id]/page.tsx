@@ -240,7 +240,12 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                         sepsisRiskScore: scorePercent,
                         aiInsight: `Risk ${prediction.risk_trend.toLowerCase()}. Top driver: ${prediction.top_drivers?.[0]?.feature ?? 'N/A'} (${prediction.top_drivers?.[0]?.direction ?? ''}).`,
                     });
-                    toast.success(`Sepsis risk updated: ${scorePercent}%`);
+
+                    if (prediction.is_sepsis_alert) {
+                        toast.error(`⚠️ SEPSIS ALERT — Risk score: ${scorePercent}%`, { duration: 8000 });
+                    } else {
+                        toast.success(`Sepsis risk updated: ${scorePercent}%`);
+                    }
                 } catch (predError) {
                     console.error('Prediction failed (vitals still saved):', predError);
                     toast.error('Vitals saved, but risk prediction failed.');

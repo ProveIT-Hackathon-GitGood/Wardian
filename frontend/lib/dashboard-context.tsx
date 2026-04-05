@@ -110,6 +110,14 @@ function generateInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
+// Derive patient status from sepsis risk score
+function deriveStatus(score: number | undefined | null): 'stable' | 'warning' | 'critical' {
+  const s = score ?? 0;
+  if (s >= 70) return 'critical';
+  if (s >= 30) return 'warning';
+  return 'stable';
+}
+
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedFloor, setSelectedFloor] = useState('');
   const [selectedWard, setSelectedWard] = useState('');
@@ -272,7 +280,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           age: bp.age,
           gender: bp.gender as 'M' | 'F',
           bedNumber: '',
-          status: 'stable',
+          status: deriveStatus(bp.sepsis_risk_score),
           sepsisRiskScore: bp.sepsis_risk_score ?? 0,
           aiInsight: bp.ai_insight ?? '',
           admissionDate: bp.admission_date,
@@ -502,6 +510,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const updated = { ...p, ...updates };
       if (updates.name && updates.name !== p.name) {
         updated.initials = generateInitials(updates.name);
+      }
+      // Re-derive status whenever sepsisRiskScore changes
+      if (updates.sepsisRiskScore !== undefined) {
+        updated.status = deriveStatus(updates.sepsisRiskScore);
       }
       return updated;
     };
