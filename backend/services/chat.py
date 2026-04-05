@@ -81,10 +81,10 @@ Directly address the clinician. Avoid introductory filler. Briefly explain the v
 
         lines = []
         for v in vitals_list[:10]:
-            ts = v.recorded_at or v.timestamp or "N/A"
+            ts = v.timestamp or "N/A"
             lines.append(
-                f"  [{ts}] HR={v.heart_rate}, BP={v.blood_pressure}, "
-                f"SpO2={v.oxygen_saturation}, RR={v.respiratory_rate}, Lactate={v.lactate}"
+                f"  [{ts}] HR={v.HR}, BP={v.SBP}, "
+                f"SpO2={v.O2Sat}, RR={v.Resp}, Lactate={v.Lactate}"
             )
         return "\n".join(lines)
 

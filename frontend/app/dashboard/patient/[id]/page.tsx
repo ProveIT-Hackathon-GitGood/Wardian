@@ -739,17 +739,10 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                 'border-success/50 bg-success/5': patient.status === 'stable',
                                             })}
                                         >
-                                            <CardHeader className="px-4 pt-3 pb-1">
-                                                <CardTitle
-                                                    className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-muted-foreground">
-                                                    <Brain className="w-3 h-3 text-primary"/>
-                                                    Sepsis AI Panel
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="px-4 pb-3">
-                                                <div className="flex items-center gap-6">
-                                                    <div className="flex flex-col items-center shrink-0">
-                                                        <div className="relative w-32 h-32">
+                                            <CardContent className="p-0 h-full flex items-center justify-center">
+                                                <div className="flex items-center justify-center gap-10 py-6 px-10">
+                                                    <div className="flex flex-col items-center shrink-0 py-2">
+                                                        <div className="relative w-40 h-40">
                                                             <svg className="w-full h-full transform -rotate-90"
                                                                  viewBox="0 0 100 100">
                                                                 <circle
@@ -759,7 +752,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                                     fill="none"
                                                                     stroke="currentColor"
                                                                     strokeWidth="8"
-                                                                    className="text-muted"
+                                                                    className="text-muted/20"
                                                                 />
                                                                 <circle
                                                                     cx="50"
@@ -781,7 +774,7 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                             <div
                                                                 className="absolute inset-0 flex flex-col items-center justify-center">
                                     <span
-                                        className={cn('text-2xl font-black leading-none italic', {
+                                        className={cn('text-4xl font-black leading-none italic', {
                                             'text-success': patient.sepsisRiskScore < 30,
                                             'text-warning':
                                                 patient.sepsisRiskScore >= 30 && patient.sepsisRiskScore < 70,
@@ -790,23 +783,27 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                     >
                                       {patient.sepsisRiskScore}%
                                     </span>
-                                                                <span className="text-[11px] text-muted-foreground mt-0.5 font-bold uppercase">Risk Score</span>
+                                                                <span className="text-[12px] text-muted-foreground mt-1 font-bold uppercase tracking-widest">Risk Score</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1.5 mb-2">
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <div className="flex items-center gap-1.5 mb-0.5 ml-1 opacity-60">
+                                                            <Brain className="w-2.5 h-2.5 text-primary"/>
+                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Sepsis AI Panel</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 mb-2 ml-1">
                                                             <Zap className="w-3.5 h-3.5 text-primary"/>
-                                                            <span className="text-[12px] font-bold text-foreground uppercase tracking-tight">AI Clinical Insight</span>
+                                                            <span className="text-[12px] font-black text-foreground uppercase tracking-tight">Clinical Insight</span>
                                                         </div>
                                                         <div className={cn(
-                                                            'px-4 py-4 rounded-xl border min-h-[80px] flex items-center shadow-inner',
-                                                            patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical font-medium' :
-                                                            patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning font-medium' :
-                                                            'bg-success/10 border-success/30 text-success font-medium'
+                                                            'p-5 rounded-xl border min-h-[100px] flex items-center justify-center shadow-sm text-center',
+                                                            patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical' :
+                                                            patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning' :
+                                                            'bg-success/10 border-success/30 text-success'
                                                         )}>
-                                                            <p className="text-sm leading-relaxed italic opacity-90">
+                                                            <p className="text-[14px] leading-relaxed italic font-normal opacity-90 max-w-[400px]">
                                                                 "{patient.aiInsight || "No clinical insight available yet."}"
                                                             </p>
                                                         </div>
