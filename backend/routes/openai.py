@@ -6,7 +6,7 @@ from schemas.openai import PromptRequest, PromptResponse
 from services.chat import ChatService
 from services.ocr import OcrService
 
-router = APIRouter(prefix="/ai", tags=["OpenAI"])
+router = APIRouter(prefix="/api/v1/ai", tags=["OpenAI"])
 
 chat_service = ChatService()
 ocr_service = OcrService()
@@ -22,5 +22,6 @@ async def ask_openai(request: PromptRequest):
 async def extract_vitals_from_image(file: UploadFile = File(...)):
     image_data = await file.read()
     base64_image = base64.b64encode(image_data).decode('utf-8')
+    content_type = file.content_type or "image/jpeg"
 
-    return await ocr_service.extract_vitals_from_image(base64_image)
+    return await ocr_service.extract_vitals_from_image(base64_image, content_type)
