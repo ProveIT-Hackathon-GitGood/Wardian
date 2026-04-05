@@ -46,6 +46,7 @@ import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
 import {apiGet, apiPost, apiUpload} from '@/lib/api/client';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
+import {AnatomyView} from "@/components/dashboard/patient/anatomy-view";
 
 const VITAL_SIGNS_OPTIONS = [
     'HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2',
@@ -729,89 +730,98 @@ function PatientDossierView({ patient }: { patient: Patient }) {
 
                             {/* Overview Tab */}
                             <TabsContent value="overview" className="space-y-4">
-                                {/* Sepsis AI Panel */}
-                                <Card
-                                    className={cn('border-2', {
-                                        'border-critical/50 bg-critical/5': patient.status === 'critical',
-                                        'border-warning/50 bg-warning/5': patient.status === 'warning',
-                                        'border-success/50 bg-success/5': patient.status === 'stable',
-                                    })}
-                                >
-                                    <CardHeader className="px-4 pt-3 pb-1">
-                                        <CardTitle
-                                            className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-muted-foreground">
-                                            <Brain className="w-3 h-3 text-primary"/>
-                                            Sepsis AI Panel
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="px-4 pb-3">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex flex-col items-center shrink-0">
-                                                <div className="relative w-24 h-24">
-                                                    <svg className="w-full h-full transform -rotate-90"
-                                                         viewBox="0 0 100 100">
-                                                        <circle
-                                                            cx="50"
-                                                            cy="50"
-                                                            r="42"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="8"
-                                                            className="text-muted"
-                                                        />
-                                                        <circle
-                                                            cx="50"
-                                                            cy="50"
-                                                            r="42"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="8"
-                                                            strokeDasharray={`${(patient.sepsisRiskScore / 100) * 264} 264`}
-                                                            strokeLinecap="round"
-                                                            className={cn({
-                                                                'text-success': patient.sepsisRiskScore < 30,
-                                                                'text-warning':
-                                                                    patient.sepsisRiskScore >= 30 && patient.sepsisRiskScore < 70,
-                                                                'text-critical': patient.sepsisRiskScore >= 70,
-                                                            })}
-                                                        />
-                                                    </svg>
-                                                    <div
-                                                        className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span
-                                className={cn('text-xl font-bold leading-none', {
-                                    'text-success': patient.sepsisRiskScore < 30,
-                                    'text-warning':
-                                        patient.sepsisRiskScore >= 30 && patient.sepsisRiskScore < 70,
-                                    'text-critical': patient.sepsisRiskScore >= 70,
-                                })}
-                            >
-                              {patient.sepsisRiskScore}%
-                            </span>
-                                                        <span className="text-[11px] text-muted-foreground mt-0.5">Risk Score</span>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                    {/* Sepsis AI Panel - spans 2 cols on lg */}
+                                    <div className="lg:col-span-2">
+                                        <Card
+                                            className={cn('h-full border-2', {
+                                                'border-critical/50 bg-critical/5': patient.status === 'critical',
+                                                'border-warning/50 bg-warning/5': patient.status === 'warning',
+                                                'border-success/50 bg-success/5': patient.status === 'stable',
+                                            })}
+                                        >
+                                            <CardHeader className="px-4 pt-3 pb-1">
+                                                <CardTitle
+                                                    className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-muted-foreground">
+                                                    <Brain className="w-3 h-3 text-primary"/>
+                                                    Sepsis AI Panel
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="px-4 pb-3">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="flex flex-col items-center shrink-0">
+                                                        <div className="relative w-32 h-32">
+                                                            <svg className="w-full h-full transform -rotate-90"
+                                                                 viewBox="0 0 100 100">
+                                                                <circle
+                                                                    cx="50"
+                                                                    cy="50"
+                                                                    r="42"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="8"
+                                                                    className="text-muted"
+                                                                />
+                                                                <circle
+                                                                    cx="50"
+                                                                    cy="50"
+                                                                    r="42"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="8"
+                                                                    strokeDasharray={`${(patient.sepsisRiskScore / 100) * 264} 264`}
+                                                                    strokeLinecap="round"
+                                                                    className={cn({
+                                                                        'text-success': patient.sepsisRiskScore < 30,
+                                                                        'text-warning':
+                                                                            patient.sepsisRiskScore >= 30 && patient.sepsisRiskScore < 70,
+                                                                        'text-critical': patient.sepsisRiskScore >= 70,
+                                                                    })}
+                                                                />
+                                                            </svg>
+                                                            <div
+                                                                className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span
+                                        className={cn('text-2xl font-black leading-none italic', {
+                                            'text-success': patient.sepsisRiskScore < 30,
+                                            'text-warning':
+                                                patient.sepsisRiskScore >= 30 && patient.sepsisRiskScore < 70,
+                                            'text-critical': patient.sepsisRiskScore >= 70,
+                                        })}
+                                    >
+                                      {patient.sepsisRiskScore}%
+                                    </span>
+                                                                <span className="text-[11px] text-muted-foreground mt-0.5 font-bold uppercase">Risk Score</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-1.5 mb-2">
+                                                            <Zap className="w-3.5 h-3.5 text-primary"/>
+                                                            <span className="text-[12px] font-bold text-foreground uppercase tracking-tight">AI Clinical Insight</span>
+                                                        </div>
+                                                        <div className={cn(
+                                                            'px-4 py-4 rounded-xl border min-h-[80px] flex items-center shadow-inner',
+                                                            patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical font-medium' :
+                                                            patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning font-medium' :
+                                                            'bg-success/10 border-success/30 text-success font-medium'
+                                                        )}>
+                                                            <p className="text-sm leading-relaxed italic opacity-90">
+                                                                "{patient.aiInsight || "No clinical insight available yet."}"
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
 
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1.5 mb-1.5">
-                                                    <Zap className="w-3 h-3 text-primary"/>
-                                                    <span className="text-[11px] font-semibold text-foreground">AI Insight</span>
-                                                </div>
-                                                <div className={cn(
-                                                    'px-4 py-3 rounded-md border min-h-[60px] flex items-center',
-                                                    patient.status === 'critical' ? 'bg-critical/10 border-critical/30 text-critical font-medium' :
-                                                    patient.status === 'warning' ? 'bg-warning/10 border-warning/30 text-warning font-medium' :
-                                                    'bg-success/10 border-success/30 text-success font-medium'
-                                                )}>
-                                                    <p className="text-xs leading-relaxed">
-                                                        {patient.aiInsight || "No clinical insight available yet."}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                    {/* Biological Anatomy View */}
+                                    <div className="lg:col-span-1">
+                                        <AnatomyView riskScore={patient.sepsisRiskScore} className="h-full" />
+                                    </div>
+                                </div>
 
                                 {/* Latest Vitals */}
                                 <Card>

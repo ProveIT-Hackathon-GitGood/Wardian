@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, ArrowLeft, ArrowRight, Shield, Stethoscope, Users } from 'lucide-react';
 import { useAuth, type RegisterData } from '@/lib/auth-context';
-import { hospitalsApi, departmentsApi, type ApiError } from '@/lib/api';
+import { authApi, hospitalsApi, departmentsApi, type ApiError } from '@/lib/api';
 import type { HospitalResponse, DepartmentResponse } from '@/lib/api/types';
 
 const FALLBACK_HOSPITALS: HospitalResponse[] = [
@@ -41,6 +41,8 @@ export default function AuthPage() {
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [activeTab, setActiveTab] = useState('login');
   const [registerHospital, setRegisterHospital] = useState('');
   const [registerDepartment, setRegisterDepartment] = useState('');
   const [registerEmployeeCode, setRegisterEmployeeCode] = useState('');
@@ -73,21 +75,32 @@ export default function AuthPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (registerPassword !== registerConfirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
     setIsLoading(true);
     try {
       const hospital = hospitals.find((h) => String(h.id) === registerHospital);
-      const data: RegisterData = {
-        name: registerName,
+      const data = {
+        full_name: registerName,
         email: registerEmail,
         password: registerPassword,
         role: registerRole as 'doctor' | 'nurse',
-        hospitalId: hospital?.id ?? 1,
-        hospitalName: hospital?.name ?? '',
-        departmentId: Number(registerDepartment),
-        employeeCode: registerEmployeeCode,
+        hospital_id: hospital?.id ?? 1,
+        department_id: Number(registerDepartment),
+        employee_code: registerEmployeeCode,
       };
-      await register(data);
-      router.push('/dashboard');
+      // Use authApi directly to avoid auto-login from useAuth().register
+      await authApi.register(data);
+      
+      toast.success('Registration successful! Please sign in with your new credentials.');
+      setRegisterStep(1);
+      setRegisterName('');
+      setRegisterEmail('');
+      setRegisterPassword('');
+      setRegisterConfirmPassword('');
+      setActiveTab('login');
     } catch (err) {
       const apiErr = err as ApiError;
       toast.error(apiErr.message || 'Registration failed. Please try again.');
@@ -96,7 +109,12 @@ export default function AuthPage() {
     }
   };
 
-  const canProceedToStep2 = registerName.trim() && registerEmail.trim() && registerPassword.trim();
+  const canProceedToStep2 = 
+    registerName.trim() && 
+    registerEmail.trim() && 
+    registerPassword.trim() && 
+    registerConfirmPassword.trim() && 
+    registerPassword === registerConfirmPassword;
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-background via-secondary/30 to-background flex">
@@ -153,7 +171,7 @@ export default function AuthPage() {
             <img src="/wardian-logo.png" alt="Wardian" className="h-[3.6rem] w-auto mb-4" />
           </div>
 
-          <Tabs defaultValue="login" className="w-full" onValueChange={() => setRegisterStep(1)}>
+          <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setRegisterStep(1); }} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
@@ -264,6 +282,21 @@ export default function AuthPage() {
                           onChange={(e) => setRegisterPassword(e.target.value)}
                           required
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-confirm-password">Confirm Password</Label>
+                        <Input
+                          id="reg-confirm-password"
+                          type="password"
+                          placeholder="Confirm your password"
+                          value={registerConfirmPassword}
+                          onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                          required
+                          className={registerConfirmPassword && registerPassword !== registerConfirmPassword ? "border-destructive text-destructive" : ""}
+                        />
+                        {registerConfirmPassword && registerPassword !== registerConfirmPassword && (
+                          <p className="text-[10px] text-destructive mt-0.5">Passwords do not match</p>
+                        )}
                       </div>
                       <Button
                         type="button"

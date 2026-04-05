@@ -40,6 +40,8 @@ import {
   UserPlus,
   UserMinus,
   ChevronDown,
+  Bed,
+  User,
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -930,25 +932,39 @@ function FloorBed({
       )}
       onClick={!isEmpty && !isDimmed ? onClick : undefined}
     >
-      {/* Bed Icon */}
-      <div className={cn(
-        'w-10 h-6 rounded border flex items-center justify-center text-[9px] font-mono font-medium',
-        isEmpty ? 'border-border bg-background text-muted-foreground' : 'border-current/20 bg-background text-foreground'
-      )}>
-        {bedNumber}
+      {/* Bed Icon and Number Container */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Bed className={cn(
+          "w-4 h-4 transition-all duration-300",
+          isEmpty ? "text-muted-foreground opacity-30" : cn("opacity-70", styles?.dot.replace('bg-', 'text-'))
+        )} />
+        <div className={cn(
+          'px-2 py-0.5 rounded border text-[10px] font-medium transition-all duration-300',
+          isEmpty 
+            ? 'bg-muted/10 border-border text-muted-foreground' 
+            : 'bg-background border-current/20 text-foreground'
+        )}>
+          {bedNumber}
+        </div>
       </div>
 
       {/* Patient Info */}
       <div className="flex-1 min-w-0">
         {isEmpty ? (
-          <span className="text-[10px] text-muted-foreground">Empty</span>
+          <div className="flex items-center gap-1.5 opacity-40">
+            <User className="w-3 h-3" />
+            <span className="text-[10px] font-medium tracking-tight">Empty</span>
+          </div>
         ) : (
-          <div className="flex items-center gap-1.5">
-            <span className={cn('w-1.5 h-1.5 rounded-full', styles?.dot)} />
-            <span className="text-xs font-medium text-foreground truncate">{patient.name}</span>
+          <div className="flex items-center gap-2">
+            <div className={cn('w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.1)]', styles?.dot)} />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <User className={cn("w-3.5 h-3.5 shrink-0 opacity-70", styles?.dot.replace('bg-', 'text-'))} />
+              <span className="text-xs font-medium text-foreground truncate tracking-tight">{patient.name}</span>
+            </div>
             {patient.status !== 'stable' && (
               <span className={cn(
-                'text-[9px] font-mono tabular-nums',
+                'text-[10px] font-bold italic ml-auto',
                 patient.status === 'warning' ? 'text-warning' : 'text-critical'
               )}>
                 {patient.sepsisRiskScore}%
@@ -1078,20 +1094,41 @@ function BedGridCard({
         </DropdownMenu>
       </div>
       {isEmpty ? (
-        <p className="text-[10px] text-muted-foreground">Empty</p>
+        <div className="flex items-center gap-1.5 opacity-40 py-1">
+          <User className="w-3 h-3" />
+          <span className="text-[10px] font-medium tracking-tight">Empty</span>
+        </div>
       ) : (
-        <>
-          <p className="text-xs font-medium text-foreground truncate">{patient.name}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{patient.diagnosis}</p>
-          {patient.status !== 'stable' && (
-            <p className={cn('text-[10px] font-mono mt-1', {
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <User className={cn("w-3.5 h-3.5 shrink-0 opacity-70", {
+              'text-success': patient.status === 'stable',
               'text-warning': patient.status === 'warning',
               'text-critical': patient.status === 'critical',
-            })}>
-              Risk: {patient.sepsisRiskScore}%
-            </p>
+            })} />
+            <p className="text-xs font-semibold text-foreground truncate tracking-tight flex-1">{patient.name}</p>
+          </div>
+          <p className="text-[10px] text-muted-foreground truncate ml-5">{patient.diagnosis}</p>
+          {patient.status !== 'stable' && (
+            <div className="flex items-center gap-1 ml-5 mt-1">
+              <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className={cn('h-full rounded-full', {
+                    'bg-warning': patient.status === 'warning',
+                    'bg-critical': patient.status === 'critical',
+                  })}
+                  style={{ width: `${patient.sepsisRiskScore}%` }}
+                />
+              </div>
+              <span className={cn('text-[9px] font-bold italic', {
+                'text-warning': patient.status === 'warning',
+                'text-critical': patient.status === 'critical',
+              })}>
+                {patient.sepsisRiskScore}%
+              </span>
+            </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
