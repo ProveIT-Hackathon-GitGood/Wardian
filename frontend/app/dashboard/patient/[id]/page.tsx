@@ -364,12 +364,13 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                         risk_trend: string;
                         is_sepsis_alert: boolean;
                         top_drivers: { feature: string; shap_impact: number; direction: string }[];
+                        ai_insight?: string;
                     }>(`/api/v1/predict/${patient.backendId}/risk-update`, { vitals: vitalsPayload }, true);
 
                     const scorePercent = Math.round(prediction.current_probability * 100);
                     updatePatient(patient.id, {
                         sepsisRiskScore: scorePercent,
-                        aiInsight: `Risk ${prediction.risk_trend.toLowerCase()}. Top driver: ${prediction.top_drivers?.[0]?.feature ?? 'N/A'} (${prediction.top_drivers?.[0]?.direction ?? ''}).`,
+                        aiInsight: prediction.ai_insight || `Risk ${prediction.risk_trend.toLowerCase()}. Top driver: ${prediction.top_drivers?.[0]?.feature ?? 'N/A'} (${prediction.top_drivers?.[0]?.direction ?? ''}).`,
                     });
 
                     if (prediction.is_sepsis_alert) {

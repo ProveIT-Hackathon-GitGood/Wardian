@@ -118,6 +118,9 @@ async def risk_update(
             risk_trend=result['risk_trend'],
             drivers=result['top_drivers']
         )
+        
+        # Include the LLM insight in the API response
+        result["ai_insight"] = ai_text
 
         update_payload = PatientUpdateSchema(
             sepsis_risk_score=risk_score,
