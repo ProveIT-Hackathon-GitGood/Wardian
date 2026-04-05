@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useCallback, use} from 'react';
+import {useState, useCallback, useRef, use} from 'react';
 import {toast} from 'sonner';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
@@ -43,7 +43,7 @@ import {SURGERY_OPTIONS, BLOOD_TYPE_OPTIONS, type Patient, type HistoryEvent} fr
 import {useDashboard} from '@/lib/dashboard-context';
 import {useDropzone} from 'react-dropzone';
 import {uploadPatientFile} from '@/lib/api/services/patients';
-import {apiPost} from '@/lib/api/client';
+import {apiPost, apiUpload} from '@/lib/api/client';
 import {AIChatPanel} from "@/components/dashboard/ai-chat";
 
 const VITAL_SIGNS_OPTIONS = [
@@ -84,6 +84,8 @@ function PatientDossierView({ patient }: { patient: Patient }) {
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [vitalSigns, setVitalSigns] = useState<{name: string, value: string}[]>([]);
     const [entrySaved, setEntrySaved] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
+    const ocrFileInputRef = useRef<HTMLInputElement>(null);
 
     const [patientReports, setPatientReports] = useState<{
         id: string;
@@ -157,6 +159,68 @@ function PatientDossierView({ patient }: { patient: Patient }) {
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
         },
     });
+
+    // ─── OCR Vitals Scan Handler ───
+    const handleOcrUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Reset input so re-selecting the same file works
+        e.target.value = '';
+
+        setIsScanning(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const result = await apiUpload<{ status: string; data?: Record<string, number>; message?: string }>(
+                '/api/v1/ai/ocr-vitals',
+                formData,
+                true
+            );
+
+            if (result.status === 'success' && result.data) {
+                // Map OCR keys (case-insensitive) to VITAL_SIGNS_OPTIONS
+                const ocrEntries = Object.entries(result.data);
+                const newVitals: { name: string; value: string }[] = [];
+
+                for (const [rawKey, rawValue] of ocrEntries) {
+                    const matchedOption = VITAL_SIGNS_OPTIONS.find(
+                        (opt) => opt.toLowerCase() === rawKey.toLowerCase()
+                    );
+                    if (matchedOption) {
+                        newVitals.push({ name: matchedOption, value: String(rawValue) });
+                    }
+                }
+
+                if (newVitals.length > 0) {
+                    // Merge: update existing entries by name, add new ones
+                    setVitalSigns((prev) => {
+                        const updated = [...prev];
+                        for (const nv of newVitals) {
+                            const existingIdx = updated.findIndex((v) => v.name === nv.name);
+                            if (existingIdx >= 0) {
+                                updated[existingIdx].value = nv.value;
+                            } else {
+                                updated.push(nv);
+                            }
+                        }
+                        return updated;
+                    });
+                    toast.success(`Scanned ${newVitals.length} vital sign${newVitals.length > 1 ? 's' : ''} from image`);
+                } else {
+                    toast.info('No recognized vital signs found in the image');
+                }
+            } else {
+                toast.error(result.message || 'Failed to extract vitals from image');
+            }
+        } catch (err) {
+            console.error('OCR vitals error:', err);
+            toast.error('Failed to scan vitals from image');
+        } finally {
+            setIsScanning(false);
+        }
+    }, []);
 
     const handleSaveEntry = async () => {
         const hasSurgery = !!selectedSurgery;
@@ -873,14 +937,36 @@ function PatientDossierView({ patient }: { patient: Patient }) {
                                                 <Activity className="w-5 h-5"/>
                                                 Vital Signs
                                             </CardTitle>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 text-xs gap-1"
-                                                onClick={() => setVitalSigns([...vitalSigns, {name: '', value: ''}])}
-                                            >
-                                                <Plus className="w-3 h-3"/> Add
-                                            </Button>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    ref={ocrFileInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleOcrUpload}
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs gap-1"
+                                                    disabled={isScanning}
+                                                    onClick={() => ocrFileInputRef.current?.click()}
+                                                >
+                                                    {isScanning ? (
+                                                        <><span className="w-3 h-3 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" /> Scanning…</>
+                                                    ) : (
+                                                        <><Upload className="w-3 h-3" /> Scan Vitals</>
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs gap-1"
+                                                    onClick={() => setVitalSigns([...vitalSigns, {name: '', value: ''}])}
+                                                >
+                                                    <Plus className="w-3 h-3"/> Add
+                                                </Button>
+                                            </div>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
