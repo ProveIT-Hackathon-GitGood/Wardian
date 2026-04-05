@@ -78,7 +78,16 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handlePatientSelect = (patientName: string, bedNumber: string) => {
+  const handlePatientSelect = (patientName: string, bedNumber: string, patientId?: string) => {
+    // If we have a patientId, navigate to their profile
+    if (patientId) {
+      router.push(`/dashboard/patient/${patientId.replace('patient-', '')}`);
+      setLocalSearch('');
+      setShowSearchResults(false);
+      return;
+    }
+
+    // Fallback/Original behavior: Scroll to bed in main layout
     setSearchQuery(patientName);
     setLocalSearch('');
     setShowSearchResults(false);
@@ -150,6 +159,11 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
               setShowSearchResults(true);
             }}
             onFocus={() => setShowSearchResults(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && filteredPatients.length > 0) {
+                handlePatientSelect(filteredPatients[0].name, filteredPatients[0].bedNumber, filteredPatients[0].id);
+              }
+            }}
             className="h-7 pl-8 pr-7 text-xs"
           />
           {localSearch && (
@@ -172,7 +186,7 @@ export function DashboardHeader({ onToggleSidebar }: DashboardHeaderProps) {
                   {filteredPatients.map((patient) => (
                     <li key={patient.id}>
                       <button
-                        onClick={() => handlePatientSelect(patient.name, patient.bedNumber)}
+                        onClick={() => handlePatientSelect(patient.name, patient.bedNumber, patient.id)}
                         className="w-full px-3 py-2 flex items-center gap-2 hover:bg-accent text-left transition-colors"
                       >
                         <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-medium ${

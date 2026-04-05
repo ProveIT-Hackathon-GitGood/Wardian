@@ -27,5 +27,14 @@ class AlertRepository:
         db.commit()
         return True
 
+    def mark_as_read(self, db: Session, alert_id: int):
+        db_alert = db.query(Alert).filter(Alert.id == alert_id).first()
+        if db_alert:
+            db_alert.is_ready = True
+            db.commit()
+            db.refresh(db_alert)
+        return db_alert
+
     def get_all_alerts(self, db: Session):
         return db.query(Alert).options(joinedload(Alert.patient)).all()
+
