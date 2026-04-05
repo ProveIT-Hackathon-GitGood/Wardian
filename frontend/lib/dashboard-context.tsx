@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { type Patient, type Alert, type Floor, type Ward, type HistoryEvent } from './mock-data';
 import { apiGet, apiPost, apiPatch } from './api/client';
 import type { WardResponse, WardCreateRequest, DepartmentResponse } from './api/types';
@@ -128,8 +128,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [floors, setFloors] = useState<Floor[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [unassignedPatients, setUnassignedPatients] = useState<Patient[]>([]);
-
   const [backendReady, setBackendReady] = useState(false);
+
+  // Maintain stable refs for lookups in callbacks to avoid dependency cycles
+  const bedsRef = useRef<Bed[]>([]);
+  const unassignedPatientsRef = useRef<Patient[]>([]);
+
+  useEffect(() => {
+    bedsRef.current = beds;
+    unassignedPatientsRef.current = unassignedPatients;
+  }, [beds, unassignedPatients]);
 
   // Poll alerts every 10 seconds (+ initial fetch) once backend is confirmed reachable
   useEffect(() => {
@@ -366,14 +374,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [selectedFloor, floors]);
 
   const getBedBackendId = useCallback((bedId: string): number | undefined => {
-    return beds.find((b) => b.id === bedId)?.backendId;
-  }, [beds]);
+    return bedsRef.current.find((b) => b.id === bedId)?.backendId;
+  }, []); // Stable
 
   const getPatientBackendId = useCallback((patientId: string): number | undefined => {
-    const bedPatient = beds.find((b) => b.patient?.id === patientId)?.patient;
+    const bedPatient = bedsRef.current.find((b) => b.patient?.id === patientId)?.patient;
     if (bedPatient?.backendId) return bedPatient.backendId;
-    return unassignedPatients.find((p) => p.id === patientId)?.backendId;
-  }, [beds, unassignedPatients]);
+    return unassignedPatientsRef.current.find((p) => p.id === patientId)?.backendId;
+  }, []); // Stable
 
 
   const markAlertAsRead = useCallback(async (alertId: string) => {
@@ -578,7 +586,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error('Failed to persist patient updates', err);
     }
-  }, [getPatientBackendId]);
+  }, [getPatientBackendId]); // Now stable because getPatientBackendId is stable
 
   const removePatient = useCallback((patientId: string) => {
     setBeds((prev) =>
@@ -678,7 +686,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       console.error('Failed to add medical history', error);
       throw error;
     }
-  }, [beds, unassignedPatients, getPatientBackendId]);
+  }, [getPatientBackendId]); // Now stable because getPatientBackendId is stable
 
 
 

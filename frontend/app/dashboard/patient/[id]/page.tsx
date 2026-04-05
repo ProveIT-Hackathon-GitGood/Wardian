@@ -127,20 +127,19 @@ function PatientDossierView({ patient }: { patient: Patient }) {
         admissionDate: patient.admissionDate,
     });
 
+    const hasFetchedVitals = useRef(false);
+
     // Fetch latest vitals from backend on mount
     useEffect(() => {
-        if (!patient.backendId) return;
+        if (!patient.backendId || hasFetchedVitals.current) return;
+        hasFetchedVitals.current = true;
 
         const fetchLatestVitals = async () => {
             try {
                 // Fetch all vitals history (sorted desc by backend)
-                // This avoids 404 if no vitals exist and provides all data for densification
                 const history = await apiGet<any[]>(`/api/v1/patient-vital/patient/${patient.backendId}`, true);
                 
-                if (!history || history.length === 0) {
-                    // No vitals in DB - we keep the initial mocked ones or could clear them here
-                    return;
-                }
+                if (!history || history.length === 0) return;
 
                 // 1. Start with the most recent record
                 let densified = { ...history[0] };
