@@ -47,9 +47,18 @@ DATASET_CSV  = os.path.join(_SCRIPT_DIR, "Dataset.csv")
 BASE_ID      = 9000   # starting ID for demo entities (high to avoid collisions)
 
 # Demo infrastructure names
-DEMO_HOSPITAL_NAME  = "Demo Hospital"
-DEMO_DEPARTMENT_NAME = "Demo ICU"
-DEMO_WARD_NUMBER     = "Demo-Ward"
+DEMO_HOSPITAL_NAME   = "Metropolitan General Hospital"
+DEMO_DEPARTMENT_NAME  = "Critical Care Unit"
+DEMO_WARD_NUMBER      = "Ward 5 Alpha"
+
+# Mapping of iconic patient IDs to humane names
+ICONIC_PATIENT_NAMES = {
+    "110411": "Robert A. Harrison",
+    "105045": "Maria S. Ionescu",
+    "111353": "Constantin G. Popescu",
+    "018469": "Elena D. Vasilescu",
+    "111512": "Andrei C. Marinescu",
+}
 
 
 def _safe_float(val) -> float | None:
@@ -122,7 +131,7 @@ def seed():
         # Create one bed per iconic patient
         bed_ids: list[int] = []
         for i in range(len(patient_ids)):
-            bed_number = f"Demo-{i + 1}"
+            bed_number = f"Bed-5A-{i + 1:02d}"
             bed = (
                 db.query(Bed)
                 .filter(Bed.bed_number == bed_number, Bed.ward_id == ward.id)
@@ -167,16 +176,17 @@ def seed():
             gender_str = "M" if gender_val == 1 else "F" if gender_val == 0 else "U"
 
             # Create patient
+            patient_name = ICONIC_PATIENT_NAMES.get(p_id, f"Patient {p_id}")
             patient = Patient(
                 bed_id=bed_ids[idx],
-                name=f"Demo Patient {p_id}",
+                name=patient_name,
                 age=int(age_val) if age_val is not None else None,
                 gender=gender_str,
                 cnp=p_id,
-                phone_number="555-0100",
-                emergency_contact_name="Jane Doe",
-                emergency_contact="555-0199",
-                attending_physician="Dr. Smith",
+                phone_number=f"0744-123-{100 + idx}",
+                emergency_contact_name="Family Member",
+                emergency_contact="0722-987-000",
+                attending_physician="Dr. Alexander Vance",
                 blood_type="O+",
                 allergies="None",
                 admission_date=datetime.utcnow(),
