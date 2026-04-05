@@ -48,3 +48,7 @@ async def create_alert(request: AlertCreateSchema, db: db_dependency):
 @alert_router.get("", response_model=list[AlertResponseSchema])
 def get_all_alerts(db: db_dependency):
     return alert_service.get_all_alerts(db)
+
+@alert_router.patch("/{alert_id}/read", status_code=200)
+def mark_alert_as_read(alert_id: int, db: db_dependency):
+    return alert_service.mark_as_read(db, alert_id)

@@ -51,6 +51,8 @@ class PatientUpdateSchema(BaseModel):
     ai_insight: Optional[str] = None
     diagnosis: Optional[str] = None
     clinical_notes: Optional[str] = None
+    admission_date: Optional[datetime] = None
+    performed_surgery: Optional[str] = None
 
 
 class PatientResponseSchema(PatientBase):

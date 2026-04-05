@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { type Patient, type Alert, type Floor, type Ward, type HistoryEvent } from './mock-data';
-import { apiGet, apiPost } from './api/client';
+import { apiGet, apiPost, apiPatch } from './api/client';
 import type { WardResponse, WardCreateRequest, DepartmentResponse } from './api/types';
 
 interface BackendBed {
@@ -365,12 +365,31 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedFloor, floors]);
 
-  const markAlertAsRead = useCallback((alertId: string) => {
-    setAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === alertId ? { ...alert, isRead: true } : alert
-      )
-    );
+  const getBedBackendId = useCallback((bedId: string): number | undefined => {
+    return beds.find((b) => b.id === bedId)?.backendId;
+  }, [beds]);
+
+  const getPatientBackendId = useCallback((patientId: string): number | undefined => {
+    const bedPatient = beds.find((b) => b.patient?.id === patientId)?.patient;
+    if (bedPatient?.backendId) return bedPatient.backendId;
+    return unassignedPatients.find((p) => p.id === patientId)?.backendId;
+  }, [beds, unassignedPatients]);
+
+
+  const markAlertAsRead = useCallback(async (alertId: string) => {
+    try {
+      // Optimitic update
+      setAlerts((prev) =>
+        prev.map((alert) =>
+          alert.id === alertId ? { ...alert, isRead: true } : alert
+        )
+      );
+      
+      // Persist to backend
+      await apiPatch(`/api/v1/alert/${alertId}/read`, {}, true);
+    } catch (err) {
+      console.error('Failed to mark alert as read', err);
+    }
   }, []);
 
   const addWard = useCallback(async (floorId: string, wardName: string) => {
@@ -505,7 +524,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setUnassignedPatients((prev) => [...prev, newPatient]);
   }, []);
 
-  const updatePatient = useCallback((patientId: string, updates: Partial<Patient>) => {
+  const updatePatient = useCallback(async (patientId: string, updates: Partial<Patient>) => {
     const applyUpdate = (p: Patient) => {
       const updated = { ...p, ...updates };
       if (updates.name && updates.name !== p.name) {
@@ -518,6 +537,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       return updated;
     };
 
+    // Optimistic update
     setBeds((prev) =>
       prev.map((bed) =>
         bed.patient?.id === patientId
@@ -531,7 +551,34 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setSelectedPatient((prev) =>
       prev?.id === patientId ? applyUpdate(prev) : prev
     );
-  }, []);
+
+    // Persist to backend
+    try {
+      const backendId = getPatientBackendId(patientId);
+      if (!backendId) return;
+
+      // Map frontend camelCase fields to backend snake_case
+      const snakeCaseUpdates: any = {};
+      if (updates.name !== undefined) snakeCaseUpdates.name = updates.name;
+      if (updates.age !== undefined) snakeCaseUpdates.age = updates.age;
+      if (updates.gender !== undefined) snakeCaseUpdates.gender = updates.gender;
+      if (updates.cnp !== undefined) snakeCaseUpdates.cnp = updates.cnp;
+      if (updates.phoneNumber !== undefined) snakeCaseUpdates.phone_number = updates.phoneNumber;
+      if (updates.emergencyContactName !== undefined) snakeCaseUpdates.emergency_contact_name = updates.emergencyContactName;
+      if (updates.emergencyContactPhone !== undefined) snakeCaseUpdates.emergency_contact = updates.emergencyContactPhone;
+      if (updates.attendingPhysician !== undefined) snakeCaseUpdates.attending_physician = updates.attendingPhysician;
+      if (updates.bloodType !== undefined) snakeCaseUpdates.blood_type = updates.bloodType;
+      if (updates.allergies !== undefined) snakeCaseUpdates.allergies = updates.allergies;
+      if (updates.diagnosis !== undefined) snakeCaseUpdates.diagnosis = updates.diagnosis;
+      if (updates.clinicalObservations !== undefined) snakeCaseUpdates.clinical_notes = updates.clinicalObservations;
+      if (updates.admissionDate !== undefined) snakeCaseUpdates.admission_date = updates.admissionDate;
+      if (updates.performedSurgery !== undefined) snakeCaseUpdates.performed_surgery = updates.performedSurgery;
+      
+      await apiPatch(`/api/v1/patient/${backendId}`, snakeCaseUpdates, true);
+    } catch (err) {
+      console.error('Failed to persist patient updates', err);
+    }
+  }, [getPatientBackendId]);
 
   const removePatient = useCallback((patientId: string) => {
     setBeds((prev) =>
@@ -569,12 +616,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const getUnassignedPatients = useCallback(() => {
     return unassignedPatients;
   }, [unassignedPatients]);
-
-  const getPatientBackendId = useCallback((patientId: string): number | undefined => {
-    const bedPatient = beds.find((b) => b.patient?.id === patientId)?.patient;
-    if (bedPatient?.backendId) return bedPatient.backendId;
-    return unassignedPatients.find((p) => p.id === patientId)?.backendId;
-  }, [beds, unassignedPatients]);
 
   const addHistoryEvent = useCallback(async (patientId: string, event: Omit<HistoryEvent, 'id'>) => {
     try {
@@ -639,9 +680,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [beds, unassignedPatients, getPatientBackendId]);
 
-  const getBedBackendId = useCallback((bedId: string): number | undefined => {
-    return beds.find((b) => b.id === bedId)?.backendId;
-  }, [beds]);
+
+
 
   const patients = beds
     .filter((bed) => bed.patient)

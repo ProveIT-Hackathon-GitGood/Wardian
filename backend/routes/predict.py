@@ -16,6 +16,9 @@ from schemas.patient import (
     PatientUpdateSchema,
 )
 from ml_module.src.ml_service import MLService
+from repositories.alert import AlertRepository
+from schemas.alert import AlertCreateSchema, AlertTypes, AlertResponseSchema
+from connection_manager.alert_manager import alert_manager
 from services.chat import ChatService
 import traceback
 
@@ -24,6 +27,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 patient_repo = PatientRepository()
 vital_repo = PatientVitalRepository()
 ml_service = MLService()
+alert_repo = AlertRepository()
 chat_service = ChatService()
 
 predict_router = APIRouter(prefix="/api/v1/predict", tags=["predict"])
@@ -123,5 +127,45 @@ async def risk_update(
     except Exception as e:
         # Non-fatal: prediction worked, just couldn't persist summary
         print(f"Warning: could not persist risk score to patient: {e}")
+
+    # ── 8. Generate Alert if risk is high (>= 30%) ─────────────────────
+    try:
+        prob = result["current_probability"]
+        if prob >= 0.3:
+            alert_type = AlertTypes.CRITICAL if prob >= 0.7 else AlertTypes.WARNING
+            
+            top_feat = result["top_drivers"][0]["feature"] if result["top_drivers"] else "N/A"
+            top_dir = result["top_drivers"][0]["direction"] if result["top_drivers"] else ""
+            alert_msg = f"Sepsis risk at {round(prob*100, 1)}%. Trend: {result['risk_trend'].lower()}. Top driver: {top_feat} ({top_dir})."
+            
+            alert_create = AlertCreateSchema(
+                patient_id=patient_id,
+                bed_id=patient.bed_id or 0,
+                ward_id=0, # Determine ward_id if possible, or use 0
+                type=alert_type,
+                message=alert_msg
+            )
+            
+            # If patient is in a bed, try to get ward_id
+            if patient.bed_id:
+                from models.bed import Bed
+                bed = db.query(Bed).filter(Bed.id == patient.bed_id).first()
+                if bed:
+                    alert_create.ward_id = bed.ward_id
+
+            new_alert = alert_repo.create_alert(alert_create, db)
+            
+            # Broadcast to dashboard
+            # The frontend expects the structure of AlertResponseSchema
+            broadcast_data = AlertResponseSchema.model_validate(new_alert).model_dump()
+            # Convert datetime to string for JSON serialization
+            broadcast_data["created_at"] = broadcast_data["created_at"].isoformat()
+            
+            await alert_manager.broadcast(broadcast_data)
+            print(f"Broadcasted alert for patient {patient_id}")
+
+    except Exception as e:
+        print(f"Warning: Failed to generate or broadcast alert: {e}")
+        traceback.print_exc()
 
     return JSONResponse(content=result)
