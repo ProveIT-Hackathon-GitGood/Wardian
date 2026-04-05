@@ -1,0 +1,182 @@
+[
+  {
+    "patient_id": "110411",
+    "hour": 56,
+    "clinical_onset": 265,
+    "lead_time": 209,
+    "risk_delta": 0.6229,
+    "current_probability": 0.8562,
+    "previous_probability": 0.2332,
+    "top_drivers": [
+      {
+        "feature": "ICULOS",
+        "shap_impact": 1.28659,
+        "direction": "stressing"
+      },
+      {
+        "feature": "FiO2_hours_since_last",
+        "shap_impact": 0.29468,
+        "direction": "stressing"
+      },
+      {
+        "feature": "EtCO2_min_4h",
+        "shap_impact": 0.22695,
+        "direction": "stressing"
+      },
+      {
+        "feature": "EtCO2",
+        "shap_impact": 0.18301,
+        "direction": "stressing"
+      },
+      {
+        "feature": "PaCO2_hours_since_last",
+        "shap_impact": 0.12119,
+        "direction": "stressing"
+      }
+    ]
+  },
+  {
+    "patient_id": "105045",
+    "hour": 77,
+    "clinical_onset": 288,
+    "lead_time": 211,
+    "risk_delta": 0.3392,
+    "current_probability": 0.6142,
+    "previous_probability": 0.275,
+    "top_drivers": [
+      {
+        "feature": "ICULOS",
+        "shap_impact": 1.80851,
+        "direction": "stressing"
+      },
+      {
+        "feature": "Magnesium_hours_since_last",
+        "shap_impact": -0.23471,
+        "direction": "protective"
+      },
+      {
+        "feature": "WBC",
+        "shap_impact": 0.22179,
+        "direction": "stressing"
+      },
+      {
+        "feature": "Temp_max_12h",
+        "shap_impact": -0.13313,
+        "direction": "protective"
+      },
+      {
+        "feature": "Chloride_hours_since_last",
+        "shap_impact": -0.12173,
+        "direction": "protective"
+      }
+    ]
+  },
+  {
+    "patient_id": "111353",
+    "hour": 6,
+    "clinical_onset": 326,
+    "lead_time": 320,
+    "risk_delta": 0.145,
+    "current_probability": 0.438,
+    "previous_probability": 0.293,
+    "top_drivers": [
+      {
+        "feature": "FiO2_hours_since_last",
+        "shap_impact": -0.16817,
+        "direction": "protective"
+      },
+      {
+        "feature": "HR_zscore_24h",
+        "shap_impact": 0.16457,
+        "direction": "stressing"
+      },
+      {
+        "feature": "Lactate_hours_since_last",
+        "shap_impact": -0.13942,
+        "direction": "protective"
+      },
+      {
+        "feature": "O2Sat_mean_24h",
+        "shap_impact": 0.1283,
+        "direction": "stressing"
+      },
+      {
+        "feature": "AST_hours_since_last",
+        "shap_impact": 0.07827,
+        "direction": "stressing"
+      }
+    ]
+  },
+  {
+    "patient_id": "018469",
+    "hour": 14,
+    "clinical_onset": 330,
+    "lead_time": 316,
+    "risk_delta": 0.1172,
+    "current_probability": 0.6031,
+    "previous_probability": 0.4859,
+    "top_drivers": [
+      {
+        "feature": "ICULOS",
+        "shap_impact": -0.53934,
+        "direction": "protective"
+      },
+      {
+        "feature": "Creatinine",
+        "shap_impact": 0.23803,
+        "direction": "stressing"
+      },
+      {
+        "feature": "PTT",
+        "shap_impact": 0.19944,
+        "direction": "stressing"
+      },
+      {
+        "feature": "Shock_Index",
+        "shap_impact": 0.14248,
+        "direction": "stressing"
+      },
+      {
+        "feature": "HR_zscore_24h",
+        "shap_impact": 0.12776,
+        "direction": "stressing"
+      }
+    ]
+  },
+  {
+    "patient_id": "111512",
+    "hour": 9,
+    "clinical_onset": 324,
+    "lead_time": 315,
+    "risk_delta": 0.2267,
+    "current_probability": 0.7681,
+    "previous_probability": 0.5414,
+    "top_drivers": [
+      {
+        "feature": "Lactate_hours_since_last",
+        "shap_impact": 0.35157,
+        "direction": "stressing"
+      },
+      {
+        "feature": "PTT",
+        "shap_impact": 0.24084,
+        "direction": "stressing"
+      },
+      {
+        "feature": "ICULOS",
+        "shap_impact": -0.23216,
+        "direction": "protective"
+      },
+      {
+        "feature": "WBC",
+        "shap_impact": 0.18259,
+        "direction": "stressing"
+      },
+      {
+        "feature": "Age",
+        "shap_impact": -0.13131,
+        "direction": "protective"
+      }
+    ]
+  }
+]

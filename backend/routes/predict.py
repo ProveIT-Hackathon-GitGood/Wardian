@@ -13,8 +13,10 @@ from schemas.patient import (
     RiskUpdateRequest,
     PatientVitalCreateSchema,
     PatientVitalResponseSchema,
+    PatientUpdateSchema,
 )
 from ml_module.src.ml_service import MLService
+import traceback
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
@@ -85,10 +87,9 @@ async def risk_update(
 
     # ── 6. Call ML Service ──────────────────────────────────────────────
     try:
-        result = ml_service.predict(
+        result = ml_service.predict_from_vitals(
             patient_id=str(patient_id),
-            history=history,
-            new_observation=body.vitals,
+            vitals_history=history,
             age=age,
             gender=gender,
         )
@@ -97,6 +98,25 @@ async def risk_update(
     except FileNotFoundError as e:
         raise HTTPException(status_code=503, detail=f"ML model not available: {e}")
     except Exception as e:
+        # print detailed explanations
+        print(f"Prediction failed: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+
+    # ── 7. Persist risk score to patient record ─────────────────────────
+    try:
+        risk_score = round(result["current_probability"] * 100, 1)
+        top_feat = result["top_drivers"][0]["feature"] if result["top_drivers"] else "N/A"
+        top_dir  = result["top_drivers"][0]["direction"] if result["top_drivers"] else ""
+        ai_text  = f"Risk {result['risk_trend'].lower()}. Top driver: {top_feat} ({top_dir})."
+
+        update_payload = PatientUpdateSchema(
+            sepsis_risk_score=risk_score,
+            ai_insight=ai_text,
+        )
+        patient_repo.update_patient(db, patient_id, update_payload)
+    except Exception as e:
+        # Non-fatal: prediction worked, just couldn't persist summary
+        print(f"Warning: could not persist risk score to patient: {e}")
 
     return JSONResponse(content=result)

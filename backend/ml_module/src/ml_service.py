@@ -25,6 +25,7 @@ import pandas as pd
 import polars as pl
 import xgboost as xgb
 
+
 # ---------------------------------------------------------------------------
 # Path wiring – locate the ml_module root and backend root
 # ---------------------------------------------------------------------------
@@ -296,3 +297,125 @@ class MLService:
             "threshold_used":       assets._threshold,
             "top_drivers":          top_drivers,
         }
+
+    # ------------------------------------------------------------------
+    # Simpler entry-point used by the /risk-update route.
+    # The route already persisted the new vital and fetched the full
+    # window of vitals, so we just run the pipeline on the data as-is.
+    # ------------------------------------------------------------------
+
+    def predict_from_vitals(
+        self,
+        patient_id: str,
+        vitals_history: List[PatientVitalResponseSchema],
+        age: Optional[float] = None,
+        gender: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        Run prediction on a pre-assembled list of vitals (already
+        including the newest row).  Returns the same dict shape as
+        ``predict()`` but does NOT do carry-forward or append.
+
+        Parameters
+        ----------
+        vitals_history :
+            Ordered list of PatientVitalResponseSchema.  The *last*
+            element is the newest observation.  Must have ≥ 2 rows so
+            we can compute a delta against the previous probability.
+        """
+        assets = _MLAssets.load()
+
+        if len(vitals_history) < 2:
+            raise ValueError(
+                "Need at least 2 vital rows to compute a risk delta."
+            )
+
+        # ── Build the combined Polars DF ────────────────────────────────
+        combined_df = _observations_to_polars(vitals_history)
+
+        if age is not None:
+            combined_df = combined_df.with_columns(pl.lit(age).alias("Age"))
+        if gender is not None:
+            combined_df = combined_df.with_columns(pl.lit(gender).alias("Gender"))
+
+        # ── Baseline (all rows except the last) ─────────────────────────
+        history_df = combined_df.slice(0, len(combined_df) - 1)
+        history_processed = run_pipeline(history_df)
+        X_base = _build_prediction_payload(history_processed, assets._feature_columns)
+        previous_probability = float(assets._model.predict_proba(X_base)[0, 1])
+
+        # ── Current (full window including last row) ────────────────────
+        combined_processed = run_pipeline(combined_df)
+        X_new = _build_prediction_payload(combined_processed, assets._feature_columns)
+        current_probability = float(assets._model.predict_proba(X_new)[0, 1])
+
+        # ── Delta & alert logic ─────────────────────────────────────────
+        risk_delta = current_probability - previous_probability
+
+        if risk_delta > 0.05:
+            risk_trend = "RISING"
+        elif risk_delta < -0.05:
+            risk_trend = "IMPROVING"
+        else:
+            risk_trend = "STABLE"
+
+        is_sepsis_alert = current_probability >= assets._threshold
+
+        # ── SHAP explainability ─────────────────────────────────────────
+        shap_values = assets._explainer.shap_values(X_new)
+        if isinstance(shap_values, list):
+            shap_values = shap_values[1]
+
+        feature_impacts = sorted(
+            zip(assets._feature_columns, shap_values[0]),
+            key=lambda x: abs(x[1]),
+            reverse=True,
+        )
+
+        top_drivers = [
+            {
+                "feature":     feat,
+                "shap_impact": round(float(val), 5),
+                "direction":   "stressing" if val > 0 else "protective",
+            }
+            for feat, val in feature_impacts[:5]
+        ]
+
+        return {
+            "patient_id":           patient_id,
+            "hour":                 vitals_history[-1].hour,
+            "previous_probability": round(previous_probability, 4),
+            "current_probability":  round(current_probability, 4),
+            "risk_delta":           round(risk_delta, 4),
+            "risk_trend":           risk_trend,
+            "is_sepsis_alert":      is_sepsis_alert,
+            "threshold_used":       assets._threshold,
+            "top_drivers":          top_drivers,
+        }
+
+    def predict_baseline(
+        self,
+        patient_id: str,
+        vitals_history: List[PatientVitalResponseSchema],
+        age: Optional[float] = None,
+        gender: Optional[float] = None,
+    ) -> float:
+        """
+        Compute just the current risk probability for seeding purposes.
+        Returns a single float (probability 0-1).
+        """
+        assets = _MLAssets.load()
+
+        if not vitals_history:
+            return 0.0
+
+        combined_df = _observations_to_polars(vitals_history)
+
+        if age is not None:
+            combined_df = combined_df.with_columns(pl.lit(age).alias("Age"))
+        if gender is not None:
+            combined_df = combined_df.with_columns(pl.lit(gender).alias("Gender"))
+
+        combined_processed = run_pipeline(combined_df)
+        X = _build_prediction_payload(combined_processed, assets._feature_columns)
+        return float(assets._model.predict_proba(X)[0, 1])
